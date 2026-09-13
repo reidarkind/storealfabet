@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["ikon-192.png", "ikon-512.png", "apple-touch-icon.png"],
+      includeAssets: ["ikon-192.png", "ikon-512.png", "apple-touch-icon.png", "ikon.svg"],
       manifest: {
         name: "StoreAlfabet",
         short_name: "StoreAlfabet",
