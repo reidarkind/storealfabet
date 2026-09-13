@@ -4,6 +4,9 @@ export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
 export const ZOMBIE_AVSTAND = 0.13;
 export const MAX_ZOMBIE_PER_STI = 1;
+export const MAX_BAESJ_PER_STI = 2;
+export const MAX_SYKLER_PER_STI = 2;
+export const MAX_BILER_PER_STI = 2;
 
 export type StiType = "krystall" | "diamant" | "zombie" | "baesj" | "syklist" | "bil";
 export type DekorType = "hus" | "hund" | "barn" | "tre";
@@ -43,6 +46,9 @@ export interface StiTilstand {
   biler: number;
   ferdig: boolean;
   zombieSpawnet: number;
+  baesjSpawnet: number;
+  sykkelSpawnet: number;
+  bilSpawnet: number;
 }
 
 export interface StiHendelse {
@@ -153,6 +159,9 @@ export function startSti(): StiTilstand {
     biler: 0,
     ferdig: false,
     zombieSpawnet: 1,
+    baesjSpawnet: 1,
+    sykkelSpawnet: 1,
+    bilSpawnet: 1,
   };
 }
 
@@ -192,13 +201,16 @@ function tilfeldigZombieX(tilfeldig: () => number): number {
   return tilfeldig() < 0.5 ? 0.12 + tilfeldig() * 0.1 : 0.78 + tilfeldig() * 0.1;
 }
 
-function tilfeldigType(tilfeldig: () => number, kanZombie: boolean): StiType {
+function tilfeldigType(
+  tilfeldig: () => number,
+  kan: { zombie: boolean; baesj: boolean; sykkel: boolean; bil: boolean },
+): StiType {
   const r = tilfeldig();
-  if (kanZombie && r < 0.04) return "zombie";
-  if (r < 0.12) return "baesj";
-  if (r < 0.24) return "syklist";
-  if (r < 0.36) return "bil";
-  if (r < 0.5) return "diamant";
+  if (kan.zombie && r < 0.04) return "zombie";
+  if (kan.baesj && r < 0.08) return "baesj";
+  if (kan.sykkel && r < 0.13) return "syklist";
+  if (kan.bil && r < 0.18) return "bil";
+  if (r < 0.4) return "diamant";
   return "krystall";
 }
 
@@ -268,6 +280,9 @@ export function stiTick(
   let sykler = tilstand.sykler ?? 0;
   let biler = tilstand.biler ?? 0;
   let zombieSpawnet = tilstand.zombieSpawnet;
+  let baesjSpawnet = tilstand.baesjSpawnet ?? 0;
+  let sykkelSpawnet = tilstand.sykkelSpawnet ?? 0;
+  let bilSpawnet = tilstand.bilSpawnet ?? 0;
   const beholdt: StiObjekt[] = [];
 
   for (const raw of tilstand.objekter) {
@@ -311,8 +326,16 @@ export function stiTick(
 
   if (spawnTeller >= 0.55) {
     spawnTeller = 0;
-    const type = tilfeldigType(tilfeldig, zombieSpawnet < MAX_ZOMBIE_PER_STI);
+    const type = tilfeldigType(tilfeldig, {
+      zombie: zombieSpawnet < MAX_ZOMBIE_PER_STI,
+      baesj: baesjSpawnet < MAX_BAESJ_PER_STI,
+      sykkel: sykkelSpawnet < MAX_SYKLER_PER_STI,
+      bil: bilSpawnet < MAX_BILER_PER_STI,
+    });
     if (type === "zombie") zombieSpawnet += 1;
+    if (type === "baesj") baesjSpawnet += 1;
+    if (type === "syklist") sykkelSpawnet += 1;
+    if (type === "bil") bilSpawnet += 1;
     beholdt.push(
       type === "syklist" || type === "bil"
         ? nyTrafikk(nesteId, type, tid, tilfeldig)
@@ -355,6 +378,9 @@ export function stiTick(
       sykler,
       biler,
       zombieSpawnet,
+      baesjSpawnet,
+      sykkelSpawnet,
+      bilSpawnet,
       ferdig: tid <= 0 || zombieTreff > 0,
     },
     hendelser,

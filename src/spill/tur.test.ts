@@ -6,6 +6,7 @@ import {
   duellFerdig,
   duellVunnet,
   harZombie,
+  leggTilKrasj,
   nesteStopp,
   registrerDuellSvar,
   registrerOppgaveSvar,
@@ -41,6 +42,9 @@ describe("tur", () => {
     let tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.1);
     expect(turKanFortsette(tur)).toBe(true);
     expect(tur.stopp).toBe(1);
+    expect(tur.sykler).toBe(0);
+    expect(tur.biler).toBe(0);
+    expect(tur.baesj).toBe(0);
     for (let i = 1; i < ANTALL_STOPP; i++) {
       tur = nesteStopp(tur);
     }
@@ -74,6 +78,15 @@ describe("tur", () => {
     expect(duellVunnet(tur)).toBe(true);
     tur = avsluttDuell(tur);
     expect(tur.lomme.diamanter).toBe(1);
+  });
+
+  it("samler krasj fra hver vei", () => {
+    const tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "alf" }, () => 0.2);
+    const neste = leggTilKrasj(tur, { sykler: 2, biler: 1, baesj: 1 });
+    expect(neste.sykler).toBe(2);
+    expect(neste.biler).toBe(1);
+    expect(neste.baesj).toBe(1);
+    expect(leggTilKrasj(neste, { sykler: 1, biler: 0, baesj: 2 }).sykler).toBe(3);
   });
 
   it("melk følger verdi", () => {

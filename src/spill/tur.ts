@@ -31,6 +31,9 @@ export interface Tur {
   duellRunde: number;
   ferdig: boolean;
   skitten: boolean;
+  sykler: number;
+  biler: number;
+  baesj: number;
 }
 
 export interface TurSlutt {
@@ -66,6 +69,21 @@ export function startTur(innstillinger: Innstillinger, tilfeldig = Math.random):
     duellRunde: 0,
     ferdig: false,
     skitten: false,
+    sykler: 0,
+    biler: 0,
+    baesj: 0,
+  };
+}
+
+export function leggTilKrasj(
+  tur: Tur,
+  rapport: { sykler: number; biler: number; baesj: number },
+): Tur {
+  return {
+    ...tur,
+    sykler: tur.sykler + rapport.sykler,
+    biler: tur.biler + rapport.biler,
+    baesj: tur.baesj + rapport.baesj,
   };
 }
 

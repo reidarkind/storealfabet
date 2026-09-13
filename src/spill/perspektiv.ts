@@ -101,11 +101,13 @@ export function turFramgang(tid: number, etappe = 1, antallStopp = 6): number {
 
 export function skolePunkt(tid: number, etappe = 1, antallStopp = 6): Prosjekt {
   const fram = turFramgang(tid, etappe, antallStopp);
-  const vei = veiPunkt(veiEndeZ(), tid);
+  const t = fram ** 1.05;
+  const z = veiEndeZ() + (0.84 - veiEndeZ()) * t;
+  const vei = veiPunkt(z, tid);
   return {
     left: vei.cx,
     top: vei.cy,
-    skala: 0.16 + fram * 1.85,
+    skala: 0.16 + t * 2.35,
     synlig: true,
   };
 }

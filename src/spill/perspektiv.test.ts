@@ -52,23 +52,23 @@ describe("perspektiv", () => {
     expect(start.skala).toBeLessThan(0.35);
   });
 
-  it("lar skolen stå øverst og bare bli større fram til Alf er framme", () => {
+  it("lar skolen komme nærmere Alf mot slutten av turen", () => {
     const start = skolePunkt(40, 1);
     const midt = skolePunkt(20, 3);
     const slutt = skolePunkt(0, 6);
     expect(midt.skala).toBeGreaterThan(start.skala);
     expect(slutt.skala).toBeGreaterThan(midt.skala);
-    expect(slutt.top).toBeLessThan(28);
-    expect(Math.abs(slutt.top - start.top)).toBeLessThan(16);
+    expect(slutt.top).toBeGreaterThan(start.top + 20);
+    expect(slutt.top).toBeGreaterThan(60);
     expect(skolePunkt(0, 1).skala).toBeGreaterThan(start.skala);
     expect(skolePunkt(40, 6).skala).toBeGreaterThan(skolePunkt(40, 5).skala);
   });
 
-  it("lar veien slutte ved skolen", () => {
-    const skole = skolePunkt(20, 4);
-    const ende = veiPunkt(veiEndeZ(), 20);
+  it("lar veien slutte i det fjerne mens skolen kommer nærmere", () => {
+    const tidlig = skolePunkt(40, 1);
+    const ende = veiPunkt(veiEndeZ(), 40);
     expect(veiEndeZ()).toBeGreaterThan(0.03);
-    expect(ende.cy).toBeCloseTo(skole.top, 0);
+    expect(Math.abs(ende.cy - tidlig.top)).toBeLessThan(8);
     expect(prosjektPunkt(0.5, 0.01, 20).synlig).toBe(false);
   });
 

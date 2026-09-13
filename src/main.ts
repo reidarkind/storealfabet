@@ -1,6 +1,15 @@
 import { registerSW } from "virtual:pwa-register";
 import "./style.css";
-import { lesLagring, oppdaterRekord, skrivLagring } from "./lagring";
+import {
+  erBlantDeTi,
+  lesLagring,
+  navnTilTavle,
+  nullstillRekorder,
+  oppdaterRekord,
+  settInnRekord,
+  skrivLagring,
+  trengerAnonymBekreftelse,
+} from "./lagring";
 import { giBelonning, verdi } from "./okonomi";
 import { sjekkSvar } from "./oppgaver/bank";
 import {
@@ -10,6 +19,7 @@ import {
   duellVunnet,
   harZombie,
   hentOppgave,
+  leggTilKrasj,
   nesteStopp,
   registrerDuellSvar,
   registrerOppgaveSvar,
@@ -18,7 +28,7 @@ import {
   startTur,
   turKanFortsette,
 } from "./spill/tur";
-import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiEndeZ, veiPunkt, zFraDist } from "./spill/perspektiv";
+import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, turFramgang, veiAvstand, veiEndeZ, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { SvarVakt } from "./spill/svar-vakt";
 import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
@@ -37,7 +47,7 @@ import {
   stoppTale,
 } from "./tale/tale";
 import { htmlMedSitertOrd } from "./oppgaver/sitat";
-import { lekseIntro, type StiRapport } from "./spill/lekse-intro";
+import { lekseIntro, lekseIntroTrykkGjelder, type StiRapport } from "./spill/lekse-intro";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { lerretPunkt } from "./tegning/punkt";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -59,7 +69,8 @@ let duellFraSti = false;
 let stiPauset = false;
 let startLopenr = 0;
 let sisteStiRapport: StiRapport = { sykler: 0, biler: 0, baesj: 0 };
-let lekseIntroFerdig: (() => void) | null = null;
+let lekseIntroResolve: (() => void) | null = null;
+let lekseIntroNed = false;
 const svarVakt = new SvarVakt();
 
 function vis(id: string): void {
@@ -77,6 +88,7 @@ function oppdaterMeny(): void {
   $("rekord").textContent = tekst;
   $("rekord-status").textContent = tekst;
   $("nivaa-vis").textContent = NIVAA_NAVN[lagret.innstillinger.nivaa];
+  fyllRekordTavle(lagret.tavle ?? []);
 }
 
 function bindMeny(): void {
@@ -132,6 +144,18 @@ function bindMeny(): void {
     aktiverLyd();
     si("Hei, jeg er Alf. Vi skal rekke skolen.", true);
   });
+  $("nullstill-rekord").addEventListener("click", () => {
+    $("nullstill-sjekk").hidden = false;
+  });
+  $("nullstill-nei").addEventListener("click", () => {
+    $("nullstill-sjekk").hidden = true;
+  });
+  $("nullstill-ja").addEventListener("click", () => {
+    const lagret = nullstillRekorder(lesLagring());
+    skrivLagring({ ...lagret, innstillinger });
+    $("nullstill-sjekk").hidden = true;
+    oppdaterMeny();
+  });
   $("lyd-pa").addEventListener("click", () => {
     innstillinger = { ...innstillinger, lydPa: !innstillinger.lydPa };
     persist();
@@ -143,6 +167,17 @@ function bindMeny(): void {
 function persist(): void {
   const lagret = lesLagring();
   skrivLagring({ ...lagret, innstillinger });
+}
+
+function fyllRekordTavle(tavle: { navn: string; verdi: number; melk: Melk }[]): void {
+  const liste = $("rekord-tavle");
+  liste.innerHTML = "";
+  $("rekord-status").hidden = tavle.length > 0;
+  for (const rad of tavle) {
+    const li = document.createElement("li");
+    li.textContent = `${rad.navn} · ${rad.verdi} poeng · ${MELK_NAVN[rad.melk]}`;
+    liste.append(li);
+  }
 }
 
 function markerSekk(): void {
@@ -196,9 +231,7 @@ async function startSpill(): Promise<void> {
   pausetSti = null;
   tegneForsok = 0;
   oppdaterHud();
-  $("oppgave-kort").hidden = true;
-  $("lekse-intro").hidden = true;
-  $("melkebod").hidden = true;
+  skjulSpillkort();
   visLekseStopp(1);
   visLekseZombie(false);
   $("hint-linje").textContent = "Skolen er der framme. Alf glemte lekser i går.";
@@ -228,7 +261,29 @@ async function nesteOppgave(): Promise<void> {
 }
 
 function avbrytLekseIntro(): void {
-  lekseIntroFerdig?.();
+  const ferdig = lekseIntroResolve;
+  lekseIntroResolve = null;
+  lekseIntroNed = false;
+  $("lekse-intro").hidden = true;
+  ferdig?.();
+}
+
+function bindLekseIntro(): void {
+  const knapp = $("lekse-intro-videre");
+  knapp.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    lekseIntroNed = lekseIntroTrykkGjelder(lekseIntroResolve != null);
+  });
+  knapp.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    if (!lekseIntroTrykkGjelder(lekseIntroNed) || !lekseIntroResolve) return;
+    const ferdig = lekseIntroResolve;
+    lekseIntroResolve = null;
+    lekseIntroNed = false;
+    $("lekse-intro").hidden = true;
+    stoppTale();
+    ferdig();
+  });
 }
 
 async function visLekseIntro(): Promise<void> {
@@ -237,6 +292,9 @@ async function visLekseIntro(): Promise<void> {
   const kort = $("lekse-intro");
   $("oppgave-kort").hidden = true;
   $("melkebod").hidden = true;
+  $("skole-ankomst").hidden = true;
+  $("rekord-navn").hidden = true;
+  $("rekord-anonym").hidden = true;
   $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
   kort.hidden = false;
   kort.classList.toggle("har-trafikk", intro.visTrafikk);
@@ -246,19 +304,10 @@ async function visLekseIntro(): Promise<void> {
   const hund = $("lekse-intro-alf") as HTMLImageElement;
   hund.src = bildeUrl("alf.svg");
   hund.alt = "Alf";
+  lekseIntroNed = false;
   if (innstillinger.lydPa) si(intro.tale, true);
   await new Promise<void>((resolve) => {
-    const knapp = $("lekse-intro-videre");
-    const ferdig = () => {
-      if (lekseIntroFerdig !== ferdig) return;
-      lekseIntroFerdig = null;
-      knapp.removeEventListener("click", ferdig);
-      kort.hidden = true;
-      stoppTale();
-      resolve();
-    };
-    lekseIntroFerdig = ferdig;
-    knapp.addEventListener("click", ferdig);
+    lekseIntroResolve = resolve;
   });
 }
 
@@ -268,6 +317,9 @@ function visOppgave(oppgave: Oppgave, overskrift: string): void {
   $("sti-spill").hidden = true;
   $("oppgave-kort").hidden = false;
   $("lekse-intro").hidden = true;
+  $("skole-ankomst").hidden = true;
+  $("rekord-navn").hidden = true;
+  $("rekord-anonym").hidden = true;
   $("melkebod").hidden = true;
   $("skjerm-spill").classList.toggle("tegn-modus", oppgave.type === "tegning");
   $("oppgave-kicker").textContent = overskrift;
@@ -504,6 +556,93 @@ async function videreEtterStopp(): Promise<void> {
   await nesteOppgave();
 }
 
+function skjulSpillkort(): void {
+  $("oppgave-kort").hidden = true;
+  $("lekse-intro").hidden = true;
+  $("skole-ankomst").hidden = true;
+  $("rekord-navn").hidden = true;
+  $("rekord-anonym").hidden = true;
+  $("melkebod").hidden = true;
+}
+
+function ventPaaKnapp(id: string): Promise<void> {
+  return new Promise((resolve) => {
+    const knapp = $(id);
+    const ferdig = (e: Event) => {
+      e.preventDefault();
+      knapp.removeEventListener("pointerup", ferdig);
+      resolve();
+    };
+    knapp.addEventListener("pointerup", ferdig);
+  });
+}
+
+async function visSkoleAnkomst(): Promise<void> {
+  skjulSpillkort();
+  $("skole-ankomst").hidden = false;
+  ($("ankomst-skole") as HTMLImageElement).src = bildeUrl("skole.svg");
+  ($("ankomst-laerer") as HTMLImageElement).src = bildeUrl("laererinne.svg");
+  ($("ankomst-alf") as HTMLImageElement).src = bildeUrl("alf.svg");
+  if (innstillinger.lydPa) si("Alf er framme! Lærerinna står utenfor og vinker.", true);
+  await ventPaaKnapp("ankomst-videre");
+  stoppTale();
+  $("skole-ankomst").hidden = true;
+}
+
+async function visRekordNavn(): Promise<string | null> {
+  const felt = $("rekord-navn-felt") as HTMLInputElement;
+  felt.value = "";
+  while (true) {
+    skjulSpillkort();
+    $("rekord-navn").hidden = false;
+    felt.focus();
+    const valg = await new Promise<"lagre" | "avbryt">((resolve) => {
+      const lagre = () => {
+        rydd();
+        resolve("lagre");
+      };
+      const avbryt = () => {
+        rydd();
+        resolve("avbryt");
+      };
+      const rydd = () => {
+        $("rekord-lagre").removeEventListener("pointerup", lagre);
+        $("rekord-avbryt").removeEventListener("pointerup", avbryt);
+      };
+      $("rekord-lagre").addEventListener("pointerup", lagre);
+      $("rekord-avbryt").addEventListener("pointerup", avbryt);
+    });
+    if (valg === "avbryt") {
+      $("rekord-navn").hidden = true;
+      return null;
+    }
+    if (!trengerAnonymBekreftelse(felt.value)) {
+      $("rekord-navn").hidden = true;
+      return navnTilTavle(felt.value);
+    }
+    $("rekord-navn").hidden = true;
+    $("rekord-anonym").hidden = false;
+    const anonym = await new Promise<boolean>((resolve) => {
+      const ja = () => {
+        rydd();
+        resolve(true);
+      };
+      const nei = () => {
+        rydd();
+        resolve(false);
+      };
+      const rydd = () => {
+        $("rekord-anonym-ja").removeEventListener("pointerup", ja);
+        $("rekord-anonym-nei").removeEventListener("pointerup", nei);
+      };
+      $("rekord-anonym-ja").addEventListener("pointerup", ja);
+      $("rekord-anonym-nei").addEventListener("pointerup", nei);
+    });
+    $("rekord-anonym").hidden = true;
+    if (anonym) return navnTilTavle("");
+  }
+}
+
 async function visMelkebod(): Promise<void> {
   if (!tur) return;
   startLopenr += 1;
@@ -512,18 +651,24 @@ async function visMelkebod(): Promise<void> {
   aktivOppgave = null;
   iDuell = false;
   $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
-  $("oppgave-kort").hidden = true;
-  $("lekse-intro").hidden = true;
   $("valg").innerHTML = "";
   $("oppgave-tekst").textContent = "";
   $("hint-linje").textContent = "";
-  $("melkebod").hidden = false;
+  await visSkoleAnkomst();
   const slutt = avsluttTur(tur);
+  let lagret = oppdaterRekord(lesLagring(), slutt.verdi, slutt.melk);
+  if (erBlantDeTi(lagret.tavle ?? [], slutt.verdi)) {
+    const navn = await visRekordNavn();
+    if (navn != null) {
+      lagret = { ...lagret, tavle: settInnRekord(lagret.tavle ?? [], { navn, verdi: slutt.verdi, melk: slutt.melk }) };
+    }
+  }
+  skrivLagring({ ...lagret, innstillinger });
+  skjulSpillkort();
+  $("melkebod").hidden = false;
   $("melk-tittel").textContent = MELK_NAVN[slutt.melk];
   $("melk-tekst").textContent = melkTekst(slutt.melk, slutt.verdi, slutt.lomme.krystaller, slutt.lomme.diamanter, slutt.skitten);
   $("melk-ikon").textContent = melkIkon(slutt.melk);
-  const lagret = oppdaterRekord(lesLagring(), slutt.verdi, slutt.melk);
-  skrivLagring({ ...lagret, innstillinger });
   feirLekse();
   if (innstillinger.lydPa) si(`Alf fikk ${MELK_NAVN[slutt.melk]}`, true);
 }
@@ -546,6 +691,9 @@ function oppdaterHud(): void {
   $("hud-krystall").textContent = String(tur.lomme.krystaller);
   $("hud-diamant").textContent = String(tur.lomme.diamanter);
   $("hud-verdi").textContent = String(verdi(tur.lomme));
+  $("hud-sykkel").textContent = String(tur.sykler + (aktivSti?.sykler ?? 0));
+  $("hud-bil").textContent = String(tur.biler + (aktivSti?.biler ?? 0));
+  $("hud-baesj").textContent = String(tur.baesj + (aktivSti?.baesj ?? 0));
 }
 
 function forberedTegning(bokstav: string): void {
@@ -632,7 +780,7 @@ function bindTegning(): void {
     duellFraSti = false;
     $("sti-start").hidden = true;
     $("sti-spill").hidden = true;
-    $("lekse-intro").hidden = true;
+    skjulSpillkort();
     $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
     tur = null;
     vis("skjerm-meny");
@@ -817,6 +965,13 @@ function tegnSti(tilstand: StiTilstand): void {
   wrap.style.left = `${skoleP.left}%`;
   wrap.style.top = `${skoleP.top}%`;
   wrap.style.transform = `translate(-50%, -88%) scale(${skoleP.skala})`;
+  const laerer = $("sti-laererinne") as HTMLImageElement;
+  const fram = turFramgang(tilstand.tid, tur?.stopp ?? 1);
+  laerer.src = bildeUrl("laererinne.svg");
+  laerer.hidden = fram < 0.62;
+  laerer.style.left = `${skoleP.left - Math.min(14, 6 + skoleP.skala * 4)}%`;
+  laerer.style.top = `${skoleP.top + 1}%`;
+  laerer.style.transform = `translate(-50%, -88%) scale(${Math.max(0.4, skoleP.skala * 0.42)})`;
   const lag = $("sti-lag");
   const levende = new Set<string>();
   for (const objekt of tilstand.dekor) {
@@ -979,8 +1134,10 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
         } else if (hendelse.type === "baesj") {
           visAlfSkitten(hendelse.tekst);
           if (tur) tur = { ...tur, skitten: true };
+          oppdaterHud();
         } else if (hendelse.type === "trafikk") {
           visAlfTrafikk(hendelse);
+          oppdaterHud();
         } else {
           visAlfTruffet();
         }
@@ -994,19 +1151,20 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
     };
     stiRamme = requestAnimationFrame(steg);
   });
-  if (tur) oppdaterHud();
   sisteStiRapport = {
     sykler: tilstand.sykler ?? 0,
     biler: tilstand.biler ?? 0,
     baesj: tilstand.baesj ?? 0,
   };
+  if (tur) tur = leggTilKrasj(tur, sisteStiRapport);
   const duell = tilstand.zombieTreff > 0;
   if (duell) {
-    pausetSti = tilstand;
+    pausetSti = { ...tilstand, sykler: 0, biler: 0, baesj: 0 };
     await vent(900);
   }
   $("sti-alf").classList.remove("gaar");
   aktivSti = null;
+  if (tur) oppdaterHud();
   panel.hidden = true;
   $("skjerm-spill").classList.remove("paa-sti");
   return duell;
@@ -1071,6 +1229,7 @@ registerSW({ immediate: true });
 
 bindMeny();
 bindTegning();
+bindLekseIntro();
 bindSti();
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {

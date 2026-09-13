@@ -78,14 +78,58 @@ body {
 .skjerm.spill.paa-sti #sti-spill {
   position: absolute;
   inset: 0;
-  top: 3.1rem;
+  top: 4.4rem;
   z-index: 1;
 }
 
 .skjerm.spill.paa-sti .verden-wrap,
 .skjerm.spill.paa-sti #oppgave-kort,
-.skjerm.spill.paa-sti #melkebod {
+.skjerm.spill.paa-sti #lekse-intro,
+.skjerm.spill.paa-sti #melkebod,
+.skjerm.spill.paa-sti #skole-ankomst,
+.skjerm.spill.paa-sti #rekord-navn,
+.skjerm.spill.paa-sti #rekord-anonym {
   display: none;
+}
+
+.tilbake-topp {
+  align-self: flex-start;
+  padding: 0.2rem 0;
+  margin: 0;
+}
+
+.bekreft {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  border-radius: 1rem;
+  background: #2a2250;
+  border: 2px solid #f4d27a66;
+}
+
+.bekreft[hidden] {
+  display: none;
+}
+
+.rekord-tavle {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.rekord-tavle li {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.9rem;
+  background: #2a2250cc;
+  border: 2px solid #f4d27a44;
+  font-weight: 800;
+}
+
+.rekord-tavle li:first-child {
+  border-color: var(--gull);
 }
 
 .skjerm.spill:not(.paa-sti) .verden-wrap {
@@ -247,9 +291,11 @@ button {
 .hud {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.7rem 0.8rem 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.55rem 0.6rem 0.35rem;
   font-weight: 800;
+  font-size: 0.82rem;
 }
 
 .mini {
@@ -263,7 +309,7 @@ button {
 .stein {
   background: #2a2250;
   border-radius: 999px;
-  padding: 0.2rem 0.55rem;
+  padding: 0.15rem 0.4rem;
 }
 
 .verden-wrap {
@@ -799,7 +845,83 @@ button {
 
 #oppgave-kort[hidden],
 #lekse-intro[hidden],
+#skole-ankomst[hidden],
+#rekord-navn[hidden],
+#rekord-anonym[hidden],
 #melkebod[hidden] {
+  display: none;
+}
+
+#rekord-navn-felt {
+  width: 100%;
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.2rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 1rem;
+  border: 2px solid #f4d27a;
+  background: #1b1633;
+  color: var(--krem);
+}
+
+.navn-felt {
+  font-weight: 800;
+  color: var(--gull);
+}
+
+.ankomst-scene {
+  position: relative;
+  height: 11rem;
+  margin: 0.3rem 0 0.6rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(#8ec6e8 0 46%, #6aa34a 46% 58%, #5c6168 58% 100%);
+  overflow: hidden;
+}
+
+#ankomst-skole {
+  position: absolute;
+  left: 58%;
+  bottom: 1.1rem;
+  width: 7.2rem;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 6px 0 #120e2244);
+}
+
+#ankomst-laerer {
+  position: absolute;
+  left: 28%;
+  bottom: 0.7rem;
+  width: 3.6rem;
+  animation: laerer-vink 0.9s ease-in-out infinite;
+  transform-origin: 70% 30%;
+}
+
+#ankomst-alf {
+  position: absolute;
+  left: 8%;
+  bottom: 0.35rem;
+  width: 4.4rem;
+  filter: drop-shadow(0 5px 0 #120e2244);
+}
+
+@keyframes laerer-vink {
+  0%,
+  100% { transform: rotate(0deg); }
+  50% { transform: rotate(-14deg); }
+}
+
+#sti-laererinne {
+  position: absolute;
+  z-index: 3;
+  width: 3.4rem;
+  height: 4.6rem;
+  object-fit: contain;
+  transform-origin: center bottom;
+  pointer-events: none;
+  animation: laerer-vink 0.9s ease-in-out infinite;
+}
+
+#sti-laererinne[hidden] {
   display: none;
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { krasjTekst, lekseIntro } from "./lekse-intro";
+import { krasjTekst, lekseIntro, lekseIntroTrykkGjelder } from "./lekse-intro";
 
 describe("lekse-intro", () => {
   it("teller sykler og biler med riktig tallord", () => {
@@ -28,5 +28,10 @@ describe("lekse-intro", () => {
     expect(intro.visTrafikk).toBe(true);
     expect(intro.visBaesj).toBe(true);
     expect(intro.tale).toContain("sykler");
+  });
+
+  it("godtar bare et trykk som startet på knappen etter at siden vises", () => {
+    expect(lekseIntroTrykkGjelder(false)).toBe(false);
+    expect(lekseIntroTrykkGjelder(true)).toBe(true);
   });
 });

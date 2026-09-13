@@ -46,6 +46,10 @@ export function krasjTekst(sykler: number, biler: number): string {
   return `Du krasjet med ${deler.join(" og ")}.`;
 }
 
+export function lekseIntroTrykkGjelder(nedEtterVisning: boolean): boolean {
+  return nedEtterVisning;
+}
+
 export function lekseIntro(rapport: StiRapport, tilfeldig = Math.random): LekseIntro {
   const avsnitt = [velg(LEKSE_VARIANT, tilfeldig)];
   const visTrafikk = rapport.sykler > 0 || rapport.biler > 0;

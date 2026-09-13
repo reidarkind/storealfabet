@@ -302,6 +302,30 @@ describe("sti", () => {
     expect(trafikkBilde("syklist", "fra")).toBe("syklist-bak");
   });
 
+  it("spawner færre biler, sykler og bæsj enn steiner", () => {
+    let n = 0;
+    const typer: string[] = [];
+    let tilstand = { ...startSti(), spawnTeller: 0.9, objekter: [] };
+    for (let i = 0; i < 50; i++) {
+      const forrige = new Set(tilstand.objekter.map((o) => o.id));
+      tilstand = stiTick(tilstand, 1, () => {
+        n += 1;
+        return (n * 0.173) % 1;
+      }).tilstand;
+      for (const objekt of tilstand.objekter) {
+        if (!forrige.has(objekt.id)) typer.push(objekt.type);
+      }
+    }
+    const baesj = typer.filter((t) => t === "baesj").length;
+    const sykler = typer.filter((t) => t === "syklist").length;
+    const biler = typer.filter((t) => t === "bil").length;
+    const steiner = typer.filter((t) => t === "krystall" || t === "diamant").length;
+    expect(baesj).toBeLessThanOrEqual(2);
+    expect(sykler).toBeLessThanOrEqual(2);
+    expect(biler).toBeLessThanOrEqual(2);
+    expect(steiner).toBeGreaterThan(baesj + sykler + biler);
+  });
+
   it("gir ulike trafikkhint", () => {
     const a = trafikkHint("bil", () => 0.1);
     const b = trafikkHint("syklist", () => 0.8);
