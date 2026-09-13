@@ -1,14 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { distFraZ, zFraDist } from "./perspektiv";
 import {
   flyttX,
   settX,
   startSti,
+  STI_SEKUNDER,
   stiFremgang,
   stiSkala,
   stiTick,
   stiVenstre,
   xFraSkjerm,
 } from "./sti";
+
+function nær(x: number, type: "krystall" | "zombie" | "baesj" | "diamant", tid = STI_SEKUNDER) {
+  return { id: 1, x, dist: distFraZ(0.9, tid), type };
+}
 
 describe("sti", () => {
   it("starter i midten og blir ferdig etter tiden", () => {
@@ -25,8 +31,8 @@ describe("sti", () => {
       ...startSti(),
       x: 0.5,
       objekter: [
-        { id: 1, x: 0.48, y: 0.9, type: "krystall" as const },
-        { id: 2, x: 0.12, y: 0.9, type: "zombie" as const },
+        { id: 1, x: 0.48, dist: distFraZ(0.9, STI_SEKUNDER), type: "krystall" as const },
+        { id: 2, x: 0.12, dist: distFraZ(0.9, STI_SEKUNDER), type: "zombie" as const },
       ],
     };
     const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
@@ -35,16 +41,17 @@ describe("sti", () => {
     expect(hendelser.map((h) => h.type)).toEqual(["plukk"]);
   });
 
-  it("treffer zombie når Alf er nær nok", () => {
+  it("treffer zombie når Alf er nær nok og gjør veien ferdig til duell", () => {
     const t = settX(
       {
         ...startSti(),
-        objekter: [{ id: 1, x: 0.8, y: 0.9, type: "zombie" }],
+        objekter: [nær(0.8, "zombie")],
       },
       0.82,
     );
     const { tilstand } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.zombieTreff).toBe(1);
+    expect(tilstand.ferdig).toBe(true);
   });
 
   it("følger fingeren flytende, ikke i tre felt", () => {
@@ -73,7 +80,7 @@ describe("sti", () => {
     const t = settX(
       {
         ...startSti(),
-        objekter: [{ id: 1, x: 0.5, y: 0.9, type: "baesj" }],
+        objekter: [nær(0.5, "baesj")],
       },
       0.5,
     );
@@ -96,13 +103,15 @@ describe("sti", () => {
     expect(tilstand.dekor.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("lar hus og syklister gli forbi uten treff", () => {
+  it("lar hus stå på samme veipunkt mens kameraet kjører", () => {
+    const dist = distFraZ(0.4, STI_SEKUNDER);
     const start = {
       ...startSti(),
-      dekor: [{ id: 9, side: -1 as const, y: 0.4, type: "hus" as const }],
+      dekor: [{ id: 9, side: -1 as const, dist, type: "hus" as const }],
     };
     const { tilstand } = stiTick(start, 0.2, () => 0.99);
-    expect(tilstand.dekor[0]?.y).toBeGreaterThan(0.4);
+    expect(tilstand.dekor[0]?.dist).toBe(dist);
+    expect(zFraDist(dist, tilstand.tid)).toBeGreaterThan(zFraDist(dist, start.tid));
     expect(tilstand.baesj).toBe(0);
   });
 
@@ -116,7 +125,7 @@ describe("sti", () => {
     const t = {
       ...startSti(),
       x: 0.2,
-      objekter: [{ id: 1, x: 0.85, y: 0.9, type: "krystall" as const }],
+      objekter: [{ id: 1, x: 0.85, dist: distFraZ(0.9, STI_SEKUNDER), type: "krystall" as const }],
     };
     const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.krystaller).toBe(0);

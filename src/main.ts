@@ -1,7 +1,7 @@
 import { registerSW } from "virtual:pwa-register";
 import "./style.css";
 import { lesLagring, oppdaterRekord, skrivLagring } from "./lagring";
-import { giBelonning, miltTap, verdi } from "./okonomi";
+import { giBelonning, verdi } from "./okonomi";
 import { sjekkSvar } from "./oppgaver/bank";
 import {
   avsluttDuell,
@@ -16,7 +16,7 @@ import {
   startDuell,
   startTur,
 } from "./spill/tur";
-import { prosjektDekor, prosjektPunkt, veiAvstand, veiPunkt } from "./spill/perspektiv";
+import { prosjektDekor, prosjektDist, prosjektPunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, settX, startSti, stiFremgang, stiTick, xFraSkjerm, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
@@ -34,6 +34,7 @@ let timerId = 0;
 let gjenstaende = TID;
 let tegner = false;
 let aktivSti: StiTilstand | null = null;
+let duellFraSti = false;
 
 function vis(id: string): void {
   document.querySelectorAll<HTMLElement>(".skjerm").forEach((el) => {
@@ -149,6 +150,7 @@ async function startSpill(): Promise<void> {
   vis("skjerm-spill");
   tur = startTur(innstillinger);
   iDuell = false;
+  duellFraSti = false;
   tegneForsok = 0;
   oppdaterHud();
   $("oppgave-kort").hidden = true;
@@ -157,7 +159,10 @@ async function startSpill(): Promise<void> {
   visLekseZombie(false);
   $("hint-linje").textContent = "Skolen er der framme. Alf glemte lekser i går.";
   await vent(300);
-  await spillSti();
+  if (await spillSti()) {
+    await startZombieDuell(true);
+    return;
+  }
   await nesteOppgave();
 }
 
@@ -272,6 +277,11 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
       : "Zombien rotet bort noen steiner. Alf løper videre.";
     oppdaterHud();
     await vent(1000);
+    if (duellFraSti) {
+      duellFraSti = false;
+      await nesteOppgave();
+      return;
+    }
     await videreEtterStopp();
     return;
   }
@@ -286,12 +296,20 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
   await videreEtterStopp();
 }
 
-async function startZombieDuell(): Promise<void> {
+async function startZombieDuell(fraSti = false): Promise<void> {
   if (!tur) return;
   iDuell = true;
+  duellFraSti = fraSti;
+  if (fraSti) {
+    const detteStoppet = tur.stopp;
+    tur = { ...tur, zombieStopp: tur.zombieStopp.filter((stopp) => stopp !== detteStoppet) };
+  }
   tur = startDuell(tur);
-  $("hint-linje").textContent = "En zombie vagger ut fra grøfta!";
+  $("hint-linje").textContent = fraSti
+    ? "Bokstavduell! Zombien vil ha steinene."
+    : "En zombie vagger ut fra grøfta!";
   visLekseZombie(true);
+  $("oppgave-kort").hidden = false;
   await nesteOppgave();
 }
 
@@ -306,7 +324,10 @@ async function videreEtterStopp(): Promise<void> {
   $("skjerm-spill").classList.remove("tegn-modus");
     $("skjerm-spill").classList.remove("paa-sti");
   $("hint-linje").textContent = "Videre mot skolen! Plukk steiner og hopp unna zombier.";
-  await spillSti();
+  if (await spillSti()) {
+    await startZombieDuell(true);
+    return;
+  }
   visLekseStopp(tur.stopp);
   oppdaterHud();
   await nesteOppgave();
@@ -355,12 +376,12 @@ function forberedTegning(bokstav: string): void {
   if (!ctx || !gctx) return;
   const dpr = window.devicePixelRatio || 1;
   const wrap = $("tegne-wrap");
-  const css = Math.max(120, Math.min(200, Math.floor(wrap.clientWidth || 160)));
+  const css = Math.max(110, Math.min(wrap.clientWidth || 160, wrap.clientHeight || 160, 200));
   for (const c of [lerret, ghost]) {
     c.width = css * dpr;
     c.height = css * dpr;
-    c.style.width = `${css}px`;
-    c.style.height = `${css}px`;
+    c.style.width = "100%";
+    c.style.height = "100%";
   }
   gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -423,6 +444,7 @@ function bindTegning(): void {
     stoppTale();
     cancelAnimationFrame(stiRamme);
     aktivSti = null;
+    duellFraSti = false;
     $("sti-spill").hidden = true;
     $("skjerm-spill").classList.remove("tegn-modus");
     tur = null;
@@ -611,7 +633,7 @@ function tegnSti(tilstand: StiTilstand): void {
   const lag = $("sti-lag");
   const levende = new Set<string>();
   for (const objekt of tilstand.dekor) {
-    const p = prosjektDekor(objekt.side, objekt.y, tilstand.tid);
+    const p = prosjektDekor(objekt.side, objekt.dist, tilstand.tid);
     oppdaterStiTing(
       lag,
       `sti-dekor-${objekt.id}`,
@@ -621,13 +643,13 @@ function tegnSti(tilstand: StiTilstand): void {
       p.left,
       p.top,
       p.skala,
-      2 + Math.round(objekt.y * 8),
+      2 + Math.round(zFraDist(objekt.dist, tilstand.tid) * 8),
       p.synlig,
       levende,
     );
   }
   for (const objekt of tilstand.objekter) {
-    const p = prosjektPunkt(objekt.x, objekt.y, tilstand.tid);
+    const p = prosjektDist(objekt.x, objekt.dist, tilstand.tid);
     oppdaterStiTing(
       lag,
       `sti-ting-${objekt.id}`,
@@ -637,7 +659,7 @@ function tegnSti(tilstand: StiTilstand): void {
       p.left,
       p.top,
       p.skala,
-      3 + Math.round(objekt.y * 10),
+      3 + Math.round(zFraDist(objekt.dist, tilstand.tid) * 10),
       p.synlig,
       levende,
     );
@@ -676,7 +698,7 @@ function visAlfSkitten(): void {
   $("sti-hjelp").textContent = "Æsj! Ikke plukk hundebæsj. Alf stinker.";
 }
 
-async function spillSti(): Promise<void> {
+async function spillSti(): Promise<boolean> {
   const panel = $("sti-spill");
   $("skjerm-spill").classList.add("paa-sti");
   panel.hidden = false;
@@ -711,9 +733,7 @@ async function spillSti(): Promise<void> {
           if (tur) tur = { ...tur, skitten: true };
         } else {
           spillKling(innstillinger.lydPa, 180);
-          if (tur) tur = { ...tur, lomme: miltTap(tur.lomme, 1) };
           visAlfTruffet();
-          oppdaterHud();
         }
       }
       tegnSti(tilstand);
@@ -726,9 +746,12 @@ async function spillSti(): Promise<void> {
     stiRamme = requestAnimationFrame(steg);
   });
   if (tur) oppdaterHud();
+  const duell = tilstand.zombieTreff > 0;
+  if (duell) await vent(900);
   aktivSti = null;
   panel.hidden = true;
   $("skjerm-spill").classList.remove("paa-sti");
+  return duell;
 }
 
 function settStiX(x: number): void {

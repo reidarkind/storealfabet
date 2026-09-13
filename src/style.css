@@ -654,6 +654,7 @@ button {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .tegn-knapper {
@@ -661,6 +662,9 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   margin-top: 0.4rem;
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
 }
 
 .tegn-knapper[hidden] {
@@ -674,6 +678,11 @@ button {
   padding: 0.45rem 0.7rem;
   border-radius: 0.8rem;
   background: #2a225099;
+}
+
+.spill.tegn-modus .hint {
+  min-height: 1.4rem;
+  margin-bottom: 0.2rem;
 }
 
 .kort {
@@ -766,11 +775,14 @@ button {
 
 #tegne-wrap {
   position: relative;
-  width: min(200px, 72vw);
-  height: min(160px, 26dvh);
-  margin: 0.2rem auto 0.4rem;
+  width: min(200px, 70vw);
+  max-height: min(38dvh, 200px);
+  aspect-ratio: 1;
+  height: auto;
+  margin: 0.2rem auto 0.35rem;
   touch-action: none;
   flex: 1 1 auto;
+  min-height: 7rem;
 }
 
 #tegn-ghost,

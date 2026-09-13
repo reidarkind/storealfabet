@@ -1,4 +1,4 @@
-import { prosjektPunkt, veiPunkt } from "./perspektiv";
+import { distFraZ, prosjektPunkt, veiPunkt, zFraDist } from "./perspektiv";
 
 export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
@@ -10,14 +10,14 @@ export type DekorSide = -1 | 1;
 export interface StiObjekt {
   id: number;
   x: number;
-  y: number;
+  dist: number;
   type: StiType;
 }
 
 export interface StiDekor {
   id: number;
   side: DekorSide;
-  y: number;
+  dist: number;
   type: DekorType;
 }
 
@@ -48,6 +48,14 @@ export function klemX(x: number): number {
   return klem(x, 0.04, 0.96);
 }
 
+function veiTing(id: number, x: number, z: number, type: StiType): StiObjekt {
+  return { id, x, dist: distFraZ(z, STI_SEKUNDER), type };
+}
+
+function veiDekor(id: number, side: DekorSide, z: number, type: DekorType): StiDekor {
+  return { id, side, dist: distFraZ(z, STI_SEKUNDER), type };
+}
+
 export function startSti(): StiTilstand {
   return {
     x: 0.5,
@@ -55,23 +63,23 @@ export function startSti(): StiTilstand {
     nesteId: 16,
     spawnTeller: 0.35,
     objekter: [
-      { id: 1, x: 0.22, y: 0.2, type: "krystall" },
-      { id: 2, x: 0.81, y: 0.34, type: "zombie" },
-      { id: 3, x: 0.47, y: 0.1, type: "diamant" },
-      { id: 14, x: 0.33, y: 0.56, type: "baesj" },
-      { id: 15, x: 0.64, y: 0.7, type: "krystall" },
+      veiTing(1, 0.22, 0.2, "krystall"),
+      veiTing(2, 0.81, 0.34, "zombie"),
+      veiTing(3, 0.47, 0.1, "diamant"),
+      veiTing(14, 0.33, 0.56, "baesj"),
+      veiTing(15, 0.64, 0.7, "krystall"),
     ],
     dekor: [
-      { id: 4, side: -1, y: 0.06, type: "hus" },
-      { id: 5, side: 1, y: 0.12, type: "tre" },
-      { id: 6, side: -1, y: 0.24, type: "syklist" },
-      { id: 7, side: 1, y: 0.2, type: "hus" },
-      { id: 8, side: -1, y: 0.38, type: "hund" },
-      { id: 9, side: 1, y: 0.34, type: "barn" },
-      { id: 10, side: -1, y: 0.52, type: "tre" },
-      { id: 11, side: 1, y: 0.58, type: "hund" },
-      { id: 12, side: -1, y: 0.68, type: "hus" },
-      { id: 13, side: 1, y: 0.76, type: "syklist" },
+      veiDekor(4, -1, 0.06, "hus"),
+      veiDekor(5, 1, 0.12, "tre"),
+      veiDekor(6, -1, 0.24, "syklist"),
+      veiDekor(7, 1, 0.2, "hus"),
+      veiDekor(8, -1, 0.38, "hund"),
+      veiDekor(9, 1, 0.34, "barn"),
+      veiDekor(10, -1, 0.52, "tre"),
+      veiDekor(11, 1, 0.58, "hund"),
+      veiDekor(12, -1, 0.68, "hus"),
+      veiDekor(13, 1, 0.76, "syklist"),
     ],
     krystaller: 0,
     diamanter: 0,
@@ -146,8 +154,6 @@ export function stiTick(
   const tid = Math.max(0, tilstand.tid - dt);
   let spawnTeller = tilstand.spawnTeller + dt;
   let nesteId = tilstand.nesteId;
-  const objekter = tilstand.objekter.map((o) => ({ ...o, y: o.y + dt * 0.42 }));
-  const dekor = tilstand.dekor.map((o) => ({ ...o, y: o.y + dt * 0.38 })).filter((o) => o.y < 1.15);
   const hendelser: StiHendelse[] = [];
   let krystaller = tilstand.krystaller;
   let diamanter = tilstand.diamanter;
@@ -155,12 +161,13 @@ export function stiTick(
   let baesj = tilstand.baesj;
   const beholdt: StiObjekt[] = [];
 
-  for (const objekt of objekter) {
-    if (objekt.y < 0.86) {
+  for (const objekt of tilstand.objekter) {
+    const z = zFraDist(objekt.dist, tid);
+    if (z < 0.86) {
       beholdt.push(objekt);
       continue;
     }
-    if (objekt.y > 1.12) {
+    if (z > 1.12) {
       continue;
     }
     if (!treffer(tilstand.x, objekt.x)) {
@@ -182,26 +189,28 @@ export function stiTick(
     }
   }
 
+  const dekor = tilstand.dekor.filter((o) => zFraDist(o.dist, tid) < 1.15);
+
   if (spawnTeller >= 0.55) {
     spawnTeller = 0;
     beholdt.push({
       id: nesteId,
       x: tilfeldigVeiX(tilfeldig),
-      y: 0.03,
+      dist: distFraZ(0.03, tid),
       type: tilfeldigType(tilfeldig),
     });
     nesteId += 1;
     dekor.push({
       id: nesteId,
       side: -1,
-      y: 0.02,
+      dist: distFraZ(0.02, tid),
       type: tilfeldigDekor(tilfeldig),
     });
     nesteId += 1;
     dekor.push({
       id: nesteId,
       side: 1,
-      y: 0.05,
+      dist: distFraZ(0.05, tid),
       type: tilfeldigDekor(tilfeldig),
     });
     nesteId += 1;
@@ -219,7 +228,7 @@ export function stiTick(
       diamanter,
       zombieTreff,
       baesj,
-      ferdig: tid <= 0,
+      ferdig: tid <= 0 || zombieTreff > 0,
     },
     hendelser,
   };
