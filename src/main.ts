@@ -19,7 +19,7 @@ import {
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
-import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
+import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stemmeEtikett, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
@@ -136,7 +136,7 @@ function fyllStemmer(): void {
   for (const stemme of stemmer) {
     const opt = document.createElement("option");
     opt.value = stemme.name;
-    opt.textContent = stemme.name;
+    opt.textContent = stemmeEtikett(stemme.name);
     valg.append(opt);
   }
   valg.value = innstillinger.stemme;

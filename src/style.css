@@ -93,6 +93,11 @@ body {
   display: none;
 }
 
+.stemme-hjelp {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
 select {
   font: inherit;
   font-weight: 800;

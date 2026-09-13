@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { erNorskLang, stemmeRang, velgBesteStemme } from "./tale";
+import { erNorskLang, forberedUttale, stemmeRang, velgBesteStemme } from "./tale";
 
 describe("stemmevalg", () => {
   it("kjenner igjen norsk språk", () => {
@@ -20,5 +20,19 @@ describe("stemmevalg", () => {
 
   it("gir kompakt damestemme lavere rang enn Henrik", () => {
     expect(stemmeRang("Henrik")).toBeGreaterThan(stemmeRang("Microsoft Nora Compact"));
+  });
+
+  it("foretrekker Google, Apple og neural over vanlig Microsoft", () => {
+    expect(stemmeRang("Google norsk", "nb-NO")).toBeGreaterThan(stemmeRang("Microsoft Hedda", "nb-NO"));
+    expect(stemmeRang("Microsoft Finn Online (Natural)", "nb-NO")).toBeGreaterThan(
+      stemmeRang("Microsoft Nora Compact", "nb-NO"),
+    );
+    expect(stemmeRang("Henrik", "nb-NO")).toBeGreaterThan(stemmeRang("Nora", "nn-NO"));
+  });
+
+  it("retter trykk på vanlige norske spillord", () => {
+    expect(forberedUttale("Alf rekker skolen")).toMatch(/sko/i);
+    expect(forberedUttale("En zombie dultet til Alf")).toMatch(/såmbi|zombi/i);
+    expect(forberedUttale("krystall og diamant")).toMatch(/krysstall|krys-tall/i);
   });
 });
