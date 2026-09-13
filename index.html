@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#3d2a6e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Alf" />
+    <meta name="description" content="Alf har forsovet seg. Hjelp ham til skolen med bokstaver!" />
+    <link rel="icon" type="image/png" href="ikon-192.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <title>Alf til skolen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app">
+      <section id="skjerm-meny" class="skjerm">
+        <p class="kicker">Alf til skolen</p>
+        <h1>Alf har forsovet seg!</h1>
+        <p class="ingress">Hjelp hunden til skolen. Samle krystaller og diamanter. Pass deg for klønete zombier.</p>
+        <p id="rekord" class="rekord"></p>
+        <p class="nivaa-linje">Nivå: <strong id="nivaa-vis">1. klasse</strong></p>
+        <button type="button" id="knapp-spill" class="hoved">Kom igjen, Alf!</button>
+        <button type="button" id="knapp-innstillinger" class="sekundaer">Innstillinger</button>
+        <button type="button" id="knapp-om" class="sekundaer">Om appen</button>
+        <p id="ios-hint" class="ios-hint" hidden>På iPhone: Del → Legg til på Hjem-skjerm</p>
+      </section>
+
+      <section id="skjerm-innstillinger" class="skjerm" hidden>
+        <h1>Innstillinger</h1>
+        <p>Velg nivå for hele turen til skolen.</p>
+        <div class="nivaa-grid">
+          <button type="button" data-nivaa="forste">1. klasse</button>
+          <button type="button" data-nivaa="andre">2. klasse</button>
+          <button type="button" data-nivaa="utfordrende">Utfordrende</button>
+          <button type="button" data-nivaa="blandet">Blandet</button>
+        </div>
+        <button type="button" id="lyd-pa" class="sekundaer" aria-pressed="true">Lyd er på</button>
+        <button type="button" data-tilbake class="tekst">Tilbake</button>
+      </section>
+
+      <section id="skjerm-om" class="skjerm" hidden>
+        <h1>Om appen</h1>
+        <p>Alf er en hund som har forsovet seg. Han må rekke skolen for å kjøpe skolemelk. Langs veien øver dere på bokstaver, lyder, rim og små ord — slik 1. og 2. klasse gjør på skolen.</p>
+        <p>Zombiene er tullete bokstavtyver. De er litt spennende, aldri skumle. Hvis du taper en duell, mister Alf noen steiner, men han kommer alltid frem.</p>
+        <p>Appen lagrer nivå og rekord bare på denne telefonen. Ingenting sendes vekk.</p>
+        <p>Legg siden til hjemskjermen, så føles den som en app. På Android spør nettleseren. På iPhone: Del → Legg til på Hjem-skjerm.</p>
+        <button type="button" data-tilbake class="tekst">Tilbake</button>
+      </section>
+
+      <section id="skjerm-spill" class="skjerm spill" hidden>
+        <header class="hud">
+          <button type="button" id="hjem-fra-spill" class="mini">Meny</button>
+          <span id="hud-stopp">1 / 6</span>
+          <span class="stein">💎 <b id="hud-diamant">0</b></span>
+          <span class="stein">🔮 <b id="hud-krystall">0</b></span>
+          <span class="stein poeng"><b id="hud-verdi">0</b></span>
+        </header>
+        <div id="verden"></div>
+        <p id="hint-linje" class="hint"></p>
+        <article id="oppgave-kort" class="kort" hidden>
+          <div class="kort-topp">
+            <p id="oppgave-kicker" class="kicker">Stopp 1</p>
+            <div id="ur" class="ur" aria-live="polite">
+              <svg viewBox="0 0 36 36" aria-hidden="true">
+                <circle class="ur-bak" cx="18" cy="18" r="16"></circle>
+                <circle id="ur-ring" class="ur-ring" cx="18" cy="18" r="16"></circle>
+              </svg>
+              <span id="ur-tekst">30</span>
+            </div>
+          </div>
+          <p id="bilde-felt" class="bilde" hidden></p>
+          <h2 id="oppgave-tekst"></h2>
+          <button type="button" id="hoer" class="hoer">Hør igjen</button>
+          <div id="valg" class="valg"></div>
+          <div id="tegne-wrap" hidden>
+            <canvas id="tegn-ghost" width="260" height="260"></canvas>
+            <canvas id="tegn" width="260" height="260"></canvas>
+          </div>
+          <button type="button" id="tegn-sjekk" class="hoved" hidden>Sjekk tegningen</button>
+        </article>
+        <article id="melkebod" class="kort bod" hidden>
+          <p class="kicker">Fremme ved skolen</p>
+          <p id="melk-ikon" class="melk-ikon">🥛</p>
+          <h2 id="melk-tittel">Vanlig skolemelk</h2>
+          <p id="melk-tekst"></p>
+          <button type="button" id="ny-tur" class="hoved">En tur til</button>
+          <button type="button" data-tilbake class="tekst">Til menyen</button>
+        </article>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

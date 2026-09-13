@@ -1,0 +1,299 @@
+:root {
+  color-scheme: dark;
+  --natt: #1b1633;
+  --lilla: #3d2a6e;
+  --rosa: #c45c7a;
+  --gull: #f4d27a;
+  --krem: #fff4dc;
+  --kort: #2a2250;
+  --sky: #7eb6d9;
+  font-family: Nunito, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 80% 8%, #f8e7b055, transparent 28%),
+    linear-gradient(180deg, #241a42 0%, var(--natt) 55%, #12101f 100%);
+  color: var(--krem);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+#app {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+.skjerm {
+  padding: 2.2rem 1.4rem 2.4rem;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.skjerm.spill {
+  padding: 0 0 1.2rem;
+  gap: 0.4rem;
+}
+
+h1,
+h2 {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: var(--gull);
+  font-weight: 800;
+}
+
+.ingress,
+.skjerm p {
+  margin: 0;
+  line-height: 1.45;
+  color: #f3e6c8;
+}
+
+.rekord,
+.nivaa-linje {
+  background: #2a2250cc;
+  border: 2px solid #f4d27a44;
+  border-radius: 1rem;
+  padding: 0.7rem 1rem;
+}
+
+button {
+  font: inherit;
+  font-weight: 800;
+  border: none;
+  border-radius: 1.1rem;
+  padding: 0.95rem 1.1rem;
+  cursor: pointer;
+}
+
+.hoved {
+  background: linear-gradient(180deg, #f7de96, #e4b24a);
+  color: #3a2410;
+  font-size: 1.2rem;
+  box-shadow: 0 8px 0 #9a6d1c;
+}
+
+.hoved:active {
+  transform: translateY(3px);
+  box-shadow: 0 5px 0 #9a6d1c;
+}
+
+.sekundaer,
+.nivaa-grid button {
+  background: #3d2a6e;
+  color: var(--krem);
+  border: 2px solid #f4d27a55;
+}
+
+.nivaa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.nivaa-grid button.valgt {
+  background: #c45c7a;
+  border-color: var(--gull);
+}
+
+.tekst {
+  background: transparent;
+  color: var(--gull);
+  text-decoration: underline;
+}
+
+.ios-hint {
+  font-size: 0.9rem;
+  color: var(--gull);
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0.8rem 0.4rem;
+  font-weight: 800;
+}
+
+.mini {
+  background: #3d2a6e;
+  color: var(--krem);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.stein {
+  background: #2a2250;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+}
+
+#verden {
+  width: 100%;
+  height: 42dvh;
+  min-height: 200px;
+}
+
+.hint {
+  min-height: 2.6rem;
+  margin: 0 1rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.8rem;
+  background: #2a225099;
+}
+
+.kort {
+  margin: 0 0.8rem;
+  background: linear-gradient(180deg, #3a2c68, #241a42);
+  border: 3px solid #f4d27a66;
+  border-radius: 1.4rem;
+  padding: 0.9rem 0.95rem 1.1rem;
+  box-shadow: 0 16px 40px #0006;
+}
+
+.kort-topp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ur {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.ur svg {
+  width: 48px;
+  height: 48px;
+  transform: rotate(-90deg);
+}
+
+.ur-bak {
+  fill: none;
+  stroke: #5a4a86;
+  stroke-width: 3;
+}
+
+.ur-ring {
+  fill: none;
+  stroke: var(--gull);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.ur.siste .ur-ring {
+  stroke: #ff8aa0;
+}
+
+#ur-tekst {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+}
+
+.bilde {
+  font-size: 3rem;
+  text-align: center;
+  margin: 0.2rem 0 0;
+}
+
+#oppgave-tekst {
+  font-size: 1.25rem;
+  margin: 0.35rem 0 0.6rem;
+}
+
+.hoer {
+  background: #5a3d8c;
+  color: var(--krem);
+  width: 100%;
+  margin-bottom: 0.7rem;
+}
+
+.valg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.valg-knapp {
+  background: var(--krem);
+  color: #3a2410;
+  font-size: 1.35rem;
+  min-height: 3.4rem;
+  box-shadow: 0 5px 0 #c9ae78;
+}
+
+.valg-knapp:active {
+  transform: translateY(2px);
+}
+
+#tegne-wrap {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0.4rem auto 0.8rem;
+  touch-action: none;
+}
+
+#tegn-ghost,
+#tegn {
+  position: absolute;
+  inset: 0;
+  width: 260px;
+  height: 260px;
+  border-radius: 1rem;
+}
+
+#tegn-ghost {
+  background: #1b1633;
+  border: 2px dashed #f4d27a66;
+}
+
+#tegn {
+  background: transparent;
+}
+
+.bod {
+  text-align: center;
+}
+
+.melk-ikon {
+  font-size: 3.4rem;
+  margin: 0.4rem 0;
+}
+
+@media (max-width: 360px) {
+  h1 {
+    font-size: 1.7rem;
+  }
+}
