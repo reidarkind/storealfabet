@@ -8,8 +8,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["ikon-192.png", "ikon-512.png", "apple-touch-icon.png"],
       manifest: {
-        name: "Alf til skolen",
-        short_name: "Alf",
+        name: "StoreAlfabet",
+        short_name: "StoreAlfabet",
         description: "Alf har forsovet seg. Hjelp ham til skolen med bokstaver!",
         lang: "nb",
         start_url: "/storealfabet/",
