@@ -823,7 +823,7 @@ async function visStartNedtelling(): Promise<boolean> {
     tall.classList.toggle("ord", steg.tekst.length > 1);
     $("sti-start-under").textContent = steg.tekst === "Kom igjen!" ? "Alf går!" : "Alf er klar";
     if (innstillinger.lydPa) {
-      if (steg.tekst === "Kom igjen!") si("Kom igjen, Alf!", true);
+      if (steg.tekst === "Kom igjen!") spillStiLyd(true, "diamant");
       else spillKling(true, 480 + Number(steg.tekst) * 90);
     }
     await vent(steg.ms);
@@ -861,6 +861,7 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
     if (!ok || !aktivSti) return false;
     tilstand = aktivSti;
   }
+  stoppTale();
   await new Promise<void>((resolve) => {
     let forrige = performance.now();
     const steg = (naa: number) => {

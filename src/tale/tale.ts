@@ -89,6 +89,10 @@ export function velgTaleModus(onsket: string, stemmer: StemmeTreff[]): TaleModus
   return beste && stemmeErGodNok(beste) ? "system" : "alf";
 }
 
+export function skalBrukeNettleserTale(onsket: string, stemmer: StemmeTreff[]): boolean {
+  return velgTaleModus(onsket, stemmer) === "system";
+}
+
 export function stiLydForHendelse(type: string, objekt?: string): StiLyd {
   if (type === "plukk") return objekt === "diamant" ? "diamant" : "krystall";
   if (type === "trafikk") return objekt === "syklist" ? "sykkel" : "bil";
@@ -101,7 +105,7 @@ function tilgjengeligeStemmer(): StemmeTreff[] {
 }
 
 function brukerAlfNa(): boolean {
-  return velgTaleModus(valgtStemmeNavn, tilgjengeligeStemmer()) === "alf";
+  return !skalBrukeNettleserTale(valgtStemmeNavn, tilgjengeligeStemmer());
 }
 
 export function norskeStemmer(): SpeechSynthesisVoice[] {
@@ -162,7 +166,11 @@ export function aktiverLyd(): void {
     void ctx.resume();
   }
   aktiverAlfLyd();
-  if (brukerAlfNa()) void lastAlfStemme();
+  if (brukerAlfNa()) {
+    void lastAlfStemme();
+    taleKlar = true;
+    return;
+  }
   if (harTale()) {
     speechSynthesis.getVoices();
     speechSynthesis.cancel();
@@ -199,15 +207,20 @@ export function si(tekst: string, lydPa: boolean): void {
   if (!taleKlar) aktiverLyd();
   stoppTale();
   if (brukerAlfNa()) {
-    if (!alfErKlar()) {
-      void lastAlfStemme();
-      siMedNettleser(tekst);
-      return;
-    }
-    void spillAlfStemme(forberedUttale(tekst)).catch(() => siMedNettleser(tekst));
+    void spillAlfUtenNora(forberedUttale(tekst));
     return;
   }
   siMedNettleser(tekst);
+}
+
+async function spillAlfUtenNora(tekst: string): Promise<void> {
+  const ok = alfErKlar() || (await lastAlfStemme());
+  if (!ok) return;
+  try {
+    await spillAlfStemme(tekst);
+  } catch {
+    /* Alf skal ikke byttes ut med Nora midt i setningen */
+  }
 }
 
 export function stoppTale(): void {

@@ -6,6 +6,7 @@ import {
   skalBrukeAlfStemme,
   stiLydForHendelse,
   stemmeRang,
+  skalBrukeNettleserTale,
   velgBesteStemme,
   velgTaleModus,
 } from "./tale";
@@ -52,6 +53,11 @@ describe("stemmevalg", () => {
     );
     expect(velgTaleModus("auto", [{ name: "Microsoft Nora Compact", lang: "nb-NO" }])).toBe("alf");
     expect(velgTaleModus("alf", [{ name: "Nora (Enhanced)", lang: "nb-NO" }])).toBe("alf");
+    expect(skalBrukeNettleserTale("alf", [{ name: "Nora (Enhanced)", lang: "nb-NO" }])).toBe(false);
+    expect(skalBrukeNettleserTale("auto", [{ name: "Microsoft Nora Compact", lang: "nb-NO" }])).toBe(false);
+    expect(
+      skalBrukeNettleserTale("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }]),
+    ).toBe(true);
   });
 
   it("gir korte veilyder i stedet for prat", () => {
