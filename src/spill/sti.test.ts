@@ -9,6 +9,7 @@ import {
   stiSkala,
   stiTick,
   stiVenstre,
+  baesjHint,
   trafikkHint,
   xFraSkjerm,
 } from "./sti";
@@ -88,6 +89,13 @@ describe("sti", () => {
     const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.baesj).toBe(1);
     expect(hendelser.map((h) => h.type)).toEqual(["baesj"]);
+    expect(hendelser[0]?.tekst).toMatch(/bæsj/i);
+  });
+
+  it("advarer mot hundebæsj med ulike tekster", () => {
+    const tekster = new Set([0, 0.2, 0.4, 0.6, 0.8].map((n) => baesjHint(() => n)));
+    expect(tekster.has("Ikke ta på hundebæsj!")).toBe(true);
+    expect(tekster.size).toBeGreaterThanOrEqual(4);
   });
 
   it("har hus, folk og zombie langs veien fra start", () => {

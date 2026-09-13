@@ -196,7 +196,11 @@ function visOppgave(oppgave: Oppgave, overskrift: string): void {
     valg.hidden = true;
     $("tegn-sjekk").hidden = false;
     $("tegn-knapper").hidden = false;
-    forberedTegning(oppgave.omriss ?? "O");
+    const omriss = oppgave.omriss ?? "O";
+    forberedTegning(omriss);
+    requestAnimationFrame(() => {
+      if (aktivOppgave?.type === "tegning") forberedTegning(aktivOppgave.omriss ?? omriss);
+    });
   } else {
     tegn.hidden = true;
     valg.hidden = false;
@@ -731,9 +735,11 @@ function visAlfTruffet(): void {
   }, 1200);
 }
 
-function visAlfSkitten(): void {
+function visAlfSkitten(tekst?: string): void {
+  const linje = tekst ?? "Ikke ta på hundebæsj!";
   $("sti-alf").classList.add("skitten");
-  $("sti-hjelp").textContent = "Æsj! Ikke plukk hundebæsj. Alf stinker.";
+  $("sti-hjelp").textContent = linje;
+  if (innstillinger.lydPa) si(linje, true);
 }
 
 function visAlfTrafikk(hendelse: StiHendelse): void {
@@ -813,7 +819,7 @@ async function spillSti(medStart = false): Promise<boolean> {
           oppdaterHud();
         } else if (hendelse.type === "baesj") {
           spillKling(innstillinger.lydPa, 140);
-          visAlfSkitten();
+          visAlfSkitten(hendelse.tekst);
           if (tur) tur = { ...tur, skitten: true };
         } else if (hendelse.type === "trafikk") {
           spillKling(innstillinger.lydPa, 210);

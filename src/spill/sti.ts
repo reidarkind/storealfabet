@@ -57,9 +57,22 @@ export const TRAFIKK_HINT_BIL = [
   "Hold deg i veikanten.",
 ];
 
+export const BAESJ_HINT = [
+  "Ikke ta på hundebæsj!",
+  "Æsj! Hundebæsj. Gå utenom.",
+  "Alf, ikke plukk bæsj!",
+  "Bæsj er ekkelt. La den ligge.",
+  "Hold deg unna hundebæsj.",
+  "Uff da, bæsj i potene!",
+];
+
 export function trafikkHint(type: TrafikkType, tilfeldig = Math.random): string {
   const liste = type === "bil" ? TRAFIKK_HINT_BIL : TRAFIKK_HINT_SYKKEL;
   return liste[Math.floor(tilfeldig() * liste.length)] ?? "Pass deg for trafikken!";
+}
+
+export function baesjHint(tilfeldig = Math.random): string {
+  return BAESJ_HINT[Math.floor(tilfeldig() * BAESJ_HINT.length)] ?? "Ikke ta på hundebæsj!";
 }
 
 function klem(verdi: number, min = 0, max = 1): number {
@@ -218,7 +231,7 @@ export function stiTick(
       });
     } else if (objekt.type === "baesj") {
       baesj += 1;
-      hendelser.push({ type: "baesj", objekt: "baesj" });
+      hendelser.push({ type: "baesj", objekt: "baesj", tekst: baesjHint(tilfeldig) });
     } else if (objekt.type === "krystall") {
       krystaller += 1;
       hendelser.push({ type: "plukk", objekt: "krystall" });

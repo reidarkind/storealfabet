@@ -778,6 +778,42 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  flex: 1 1 auto;
+  padding: 0.55rem 0.75rem 0.55rem;
+}
+
+.spill.tegn-modus #oppgave-tekst {
+  font-size: 1.05rem;
+  margin: 0.1rem 0 0.25rem;
+}
+
+.spill.tegn-modus .hoer {
+  margin-bottom: 0.3rem;
+  padding: 0.55rem 0.8rem;
+}
+
+.spill.tegn-modus #tegne-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  width: auto;
+  max-width: min(240px, 100%);
+  max-height: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  margin: 0.15rem auto;
+  align-self: center;
+}
+
+.spill.tegn-modus .tegn-knapper {
+  flex: 0 0 auto;
+  margin-top: 0.3rem;
+}
+
+.spill.tegn-modus .tegn-knapper .hoved,
+.spill.tegn-modus .tegn-knapper .sekundaer {
+  padding: 0.65rem 0.5rem;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 0 #9a6d1c;
 }
 
 .tegn-knapper {
@@ -803,9 +839,13 @@ button {
   background: #2a225099;
 }
 
+.hint:empty {
+  display: none;
+}
+
 .spill.tegn-modus .hint {
-  min-height: 1.4rem;
-  margin-bottom: 0.2rem;
+  min-height: 0;
+  margin-bottom: 0.15rem;
 }
 
 .kort {
@@ -905,7 +945,7 @@ button {
   margin: 0.2rem auto 0.35rem;
   touch-action: none;
   flex: 1 1 auto;
-  min-height: 7rem;
+  min-height: 0;
 }
 
 #tegn-ghost,
