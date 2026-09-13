@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bakomBakke, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, veiPunktDist, veiSvingVed, zFraDist } from "./perspektiv";
+import { bakomBakke, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiEndeZ, veiPunkt, veiPunktDist, veiSvingVed, zFraDist } from "./perspektiv";
 
 describe("perspektiv", () => {
   it("legger stein på veien ved forsvinningspunktet, ikke i himmelen", () => {
@@ -44,23 +44,38 @@ describe("perspektiv", () => {
     expect(senere.left).toBeCloseTo(vei2.cx + (0.2 - 0.5) * 2 * vei2.halv, 5);
   });
 
-  it("setter skolen på veien i det fjerne", () => {
+  it("setter skolen øverst i det fjerne", () => {
     const start = skolePunkt(40, 1);
     expect(start.synlig).toBe(true);
-    expect(start.top).toBeGreaterThan(10);
-    expect(start.top).toBeLessThan(50);
-    expect(start.skala).toBeLessThan(0.7);
+    expect(start.top).toBeGreaterThan(8);
+    expect(start.top).toBeLessThan(28);
+    expect(start.skala).toBeLessThan(0.35);
   });
 
-  it("lar skolen komme nærmere gjennom turen til Alf er framme", () => {
+  it("lar skolen stå øverst og bare bli større fram til Alf er framme", () => {
     const start = skolePunkt(40, 1);
     const midt = skolePunkt(20, 3);
     const slutt = skolePunkt(0, 6);
     expect(midt.skala).toBeGreaterThan(start.skala);
     expect(slutt.skala).toBeGreaterThan(midt.skala);
-    expect(slutt.top).toBeGreaterThan(start.top + 20);
-    expect(slutt.top).toBeGreaterThan(70);
+    expect(slutt.top).toBeLessThan(28);
+    expect(Math.abs(slutt.top - start.top)).toBeLessThan(16);
     expect(skolePunkt(0, 1).skala).toBeGreaterThan(start.skala);
     expect(skolePunkt(40, 6).skala).toBeGreaterThan(skolePunkt(40, 5).skala);
+  });
+
+  it("lar veien slutte ved skolen", () => {
+    const skole = skolePunkt(20, 4);
+    const ende = veiPunkt(veiEndeZ(), 20);
+    expect(veiEndeZ()).toBeGreaterThan(0.03);
+    expect(ende.cy).toBeCloseTo(skole.top, 0);
+    expect(prosjektPunkt(0.5, 0.01, 20).synlig).toBe(false);
+  });
+
+  it("lar fjerne ting starte nesten usynlige og vokse når de kommer nærmere", () => {
+    const langt = prosjektPunkt(0.5, 0.1, 40);
+    const naer = prosjektPunkt(0.5, 0.9, 40);
+    expect(langt.skala).toBeLessThan(0.16);
+    expect(naer.skala).toBeGreaterThan(langt.skala * 4);
   });
 });

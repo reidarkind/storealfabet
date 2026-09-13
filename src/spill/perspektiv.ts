@@ -42,13 +42,17 @@ export function veiBakkeVed(dist: number): number {
   return Math.sin(dist * 0.33) * 0.7 + Math.sin(dist * 0.09) * 0.32;
 }
 
+export function veiEndeZ(): number {
+  return 0.06;
+}
+
 export function veiPunktDist(dist: number, tid: number): VeiPunkt {
   const z = zFraDist(dist, tid);
   const t = perspektivT(z);
   const sving = veiSvingVed(dist);
   const bakke = veiBakkeVed(dist);
   const horX = 50 + veiSvingVed(distFraZ(0, tid)) * 26;
-  const horY = 20 + veiBakkeVed(distFraZ(0.12, tid)) * 9 - veiBakkeVed(distFraZ(1, tid)) * 5;
+  const horY = klem(20 + veiBakkeVed(distFraZ(0.12, tid)) * 9 - veiBakkeVed(distFraZ(1, tid)) * 5, 12, 24);
   const cx = horX + (50 - horX) * t + sving * t * (1 - t) * 46;
   const cy = horY + (96 - horY) * t - bakke * t * (1 - t) * 44;
   const halv = 1.8 + t * 48;
@@ -77,8 +81,8 @@ export function prosjektDist(x: number, dist: number, tid: number): Prosjekt {
   return {
     left: vei.cx + (x - 0.5) * 2 * vei.halv,
     top: vei.cy,
-    skala: 0.1 + t * 1.22,
-    synlig: z > 0.04 && z < 1.18 && t > 0.03 && !bakomBakke(z, tid),
+    skala: 0.02 + t * 1.35,
+    synlig: z > veiEndeZ() && z < 1.18 && t > 0.008 && !bakomBakke(z, tid),
   };
 }
 
@@ -90,16 +94,18 @@ export function prosjektDekor(side: -1 | 1, dist: number, tid: number): Prosjekt
   return prosjektDist(side < 0 ? -0.16 : 1.16, dist, tid);
 }
 
-export function skolePunkt(tid: number, etappe = 1, antallStopp = 6): Prosjekt {
+export function turFramgang(tid: number, etappe = 1, antallStopp = 6): number {
   const iEtappe = klem(1 - tid / STI_SEKUNDER);
-  const fram = klem((etappe - 1 + iEtappe) / Math.max(1, antallStopp));
-  const z = 0.075 + fram * 0.82;
-  const vei = veiPunkt(z, tid);
-  const t = perspektivT(z);
+  return klem((etappe - 1 + iEtappe) / Math.max(1, antallStopp));
+}
+
+export function skolePunkt(tid: number, etappe = 1, antallStopp = 6): Prosjekt {
+  const fram = turFramgang(tid, etappe, antallStopp);
+  const vei = veiPunkt(veiEndeZ(), tid);
   return {
     left: vei.cx,
     top: vei.cy,
-    skala: 0.34 + t * 1.45,
+    skala: 0.16 + fram * 1.85,
     synlig: true,
   };
 }

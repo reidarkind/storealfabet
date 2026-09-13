@@ -1,4 +1,4 @@
-import { distFraZ, prosjektPunkt, veiPunkt, zFraDist } from "./perspektiv";
+import { distFraZ, prosjektPunkt, veiEndeZ, veiPunkt, zFraDist } from "./perspektiv";
 
 export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
@@ -221,7 +221,7 @@ function nyTrafikk(id: number, type: TrafikkType, tid: number, tilfeldig: () => 
   return {
     id,
     x,
-    dist: distFraZ(retning === "fra" ? 0.58 : 0.03, tid),
+    dist: distFraZ(retning === "fra" ? 0.58 : veiEndeZ() + 0.02, tid),
     type,
     retning,
     baneX: x,
@@ -295,20 +295,20 @@ export function stiTick(
     beholdt.push(
       type === "syklist" || type === "bil"
         ? nyTrafikk(nesteId, type, tid, tilfeldig)
-        : { id: nesteId, x: tilfeldigVeiX(tilfeldig), dist: distFraZ(0.03, tid), type },
+        : { id: nesteId, x: tilfeldigVeiX(tilfeldig), dist: distFraZ(veiEndeZ() + 0.02, tid), type },
     );
     nesteId += 1;
     dekor.push({
       id: nesteId,
       side: -1,
-      dist: distFraZ(0.02, tid),
+      dist: distFraZ(veiEndeZ() + 0.02, tid),
       type: tilfeldigDekor(tilfeldig),
     });
     nesteId += 1;
     dekor.push({
       id: nesteId,
       side: 1,
-      dist: distFraZ(0.05, tid),
+      dist: distFraZ(veiEndeZ() + 0.03, tid),
       type: tilfeldigDekor(tilfeldig),
     });
     nesteId += 1;

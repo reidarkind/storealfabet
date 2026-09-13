@@ -17,7 +17,7 @@ import {
   startNedtelling,
   startTur,
 } from "./spill/tur";
-import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
+import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiEndeZ, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { SvarVakt } from "./spill/svar-vakt";
 import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
@@ -628,7 +628,7 @@ function tegnVeiLerret(tilstand: StiTilstand): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const hor = veiPunkt(0.02, tilstand.tid);
+  const hor = veiPunkt(veiEndeZ(), tilstand.tid);
   const hy = (hor.cy / 100) * h;
   const himmel = ctx.createLinearGradient(0, 0, 0, Math.max(8, hy));
   himmel.addColorStop(0, "#7eb6d9");
@@ -644,9 +644,10 @@ function tegnVeiLerret(tilstand: StiTilstand): void {
   ctx.fillRect(0, hy, w, Math.max(1, h - hy));
   const n = 58;
   const fase = veiAvstand(tilstand.tid);
+  const ende = veiEndeZ();
   for (let i = 0; i < n; i++) {
-    const z0 = i / n;
-    const z1 = (i + 1) / n;
+    const z0 = ende + (i / n) * (1 - ende);
+    const z1 = ende + ((i + 1) / n) * (1 - ende);
     const a = veiPunkt(z0, tilstand.tid);
     const b = veiPunkt(z1, tilstand.tid);
     const y0 = (a.cy / 100) * h;
