@@ -15,9 +15,9 @@ export function skalBrukeAlfStemme(navn: string): boolean {
 }
 
 export function migrerStemme(navn: string): string {
-  if (navn === ALF_STEMME || navn === "") return AUTO_STEMME;
+  if (navn === ALF_STEMME || navn === "" || navn === AUTO_STEMME) return ALF_STEMME;
   const n = navn.toLowerCase();
-  if (/microsoft|hedda|compact/.test(n) && /nora|hedda|compact/.test(n)) return AUTO_STEMME;
+  if (/microsoft|hedda|compact/.test(n) && /nora|hedda|compact/.test(n)) return ALF_STEMME;
   return navn;
 }
 
@@ -139,7 +139,8 @@ const UTTALE: [RegExp, string][] = [
 
 export function forberedUttale(tekst: string): string {
   const enLyd = tekst.replace(/([a-zæøå])\1{2,}/gi, "$1");
-  return UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), enLyd);
+  const medPause = enLyd.replace(/«([^»]+)»/g, " ... $1 ... ");
+  return UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), medPause);
 }
 
 export function lesOppgave(oppgave: { prompt: string; tale: string }): string {

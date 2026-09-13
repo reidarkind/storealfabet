@@ -53,7 +53,7 @@
         <p>Stemme</p>
         <div id="stemme-valg" class="nivaa-grid stemme-grid" role="radiogroup" aria-label="Velg stemme"></div>
         <p id="stemme-status" class="stemme-status" hidden></p>
-        <p class="stemme-hjelp">Telefonens stemme bruker Siri eller den beste norske stemmen på telefonen. Alfs stemme ligger i appen hvis du vil ha den i stedet.</p>
+        <p class="stemme-hjelp">Alfs stemme lastes ned første gang appen åpnes, og er standard. Telefonens stemme bruker Siri eller den beste norske stemmen på telefonen.</p>
         <button type="button" id="prov-stemme" class="sekundaer">Prøv stemmen</button>
         <button type="button" data-tilbake class="tekst">Tilbake</button>
       </section>
@@ -156,6 +156,22 @@
             <button type="button" data-bane="2" aria-label="Høyre"></button>
           </div>
         </div>
+        <article id="lekse-intro" class="kort lekse-intro" hidden>
+          <p class="kicker">Før leksene</p>
+          <div class="lekse-intro-figur" aria-hidden="true">
+            <img id="lekse-intro-alf" alt="" />
+            <div class="lekse-intro-scene">
+              <div class="lekse-skilt">!</div>
+              <div class="lekse-vei-mini"></div>
+              <div class="lekse-bil"></div>
+              <div class="lekse-sykkel"></div>
+              <div class="lekse-baesj"></div>
+            </div>
+          </div>
+          <h2 id="lekse-intro-tittel">Oi, leksene!</h2>
+          <div id="lekse-intro-tekst"></div>
+          <button type="button" id="lekse-intro-videre" class="hoved">Ja, vi hjelper Alf</button>
+        </article>
         <article id="oppgave-kort" class="kort" hidden>
           <div class="kort-topp">
             <p id="oppgave-kicker" class="kicker">Stopp 1</p>

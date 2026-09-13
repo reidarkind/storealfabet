@@ -36,7 +36,10 @@ import {
   stiLydForHendelse,
   stoppTale,
 } from "./tale/tale";
+import { htmlMedSitertOrd } from "./oppgaver/sitat";
+import { lekseIntro, type StiRapport } from "./spill/lekse-intro";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
+import { lerretPunkt } from "./tegning/punkt";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
 const TID = 30;
@@ -55,6 +58,8 @@ let pausetSti: StiTilstand | null = null;
 let duellFraSti = false;
 let stiPauset = false;
 let startLopenr = 0;
+let sisteStiRapport: StiRapport = { sykler: 0, biler: 0, baesj: 0 };
+let lekseIntroFerdig: (() => void) | null = null;
 const svarVakt = new SvarVakt();
 
 function vis(id: string): void {
@@ -117,7 +122,7 @@ function bindMeny(): void {
   $("stemme-valg").addEventListener("click", (e) => {
     const knapp = (e.target as HTMLElement).closest("[data-stemme]");
     if (!(knapp instanceof HTMLButtonElement)) return;
-    innstillinger = { ...innstillinger, stemme: knapp.dataset.stemme || AUTO_STEMME };
+    innstillinger = { ...innstillinger, stemme: knapp.dataset.stemme || ALF_STEMME };
     settStemme(innstillinger.stemme);
     persist();
     markerStemme();
@@ -149,11 +154,13 @@ function markerSekk(): void {
 function fyllStemmer(): void {
   const felt = $("stemme-valg");
   felt.innerHTML = "";
-  const knapper: { id: string; tekst: string }[] = [{ id: AUTO_STEMME, tekst: "Telefonens stemme" }];
+  const knapper: { id: string; tekst: string }[] = [
+    { id: ALF_STEMME, tekst: "Alfs stemme (anbefalt)" },
+    { id: AUTO_STEMME, tekst: "Telefonens stemme" },
+  ];
   for (const stemme of norskeStemmer()) {
     knapper.push({ id: stemme.name, tekst: stemme.name });
   }
-  knapper.push({ id: ALF_STEMME, tekst: "Alfs stemme (i appen)" });
   for (const rad of knapper) {
     const knapp = document.createElement("button");
     knapp.type = "button";
@@ -165,7 +172,7 @@ function fyllStemmer(): void {
 }
 
 function markerStemme(): void {
-  const valgt = innstillinger.stemme || AUTO_STEMME;
+  const valgt = innstillinger.stemme || ALF_STEMME;
   document.querySelectorAll<HTMLButtonElement>("#stemme-valg [data-stemme]").forEach((knapp) => {
     const erValgt = knapp.dataset.stemme === valgt;
     knapp.classList.toggle("valgt", erValgt);
@@ -190,6 +197,7 @@ async function startSpill(): Promise<void> {
   tegneForsok = 0;
   oppdaterHud();
   $("oppgave-kort").hidden = true;
+  $("lekse-intro").hidden = true;
   $("melkebod").hidden = true;
   visLekseStopp(1);
   visLekseZombie(false);
@@ -201,6 +209,8 @@ async function startSpill(): Promise<void> {
     await startZombieDuell(true);
     return;
   }
+  if (nr !== startLopenr) return;
+  await visLekseIntro();
   if (nr !== startLopenr) return;
   await nesteOppgave();
 }
@@ -217,15 +227,51 @@ async function nesteOppgave(): Promise<void> {
   }, 80);
 }
 
+function avbrytLekseIntro(): void {
+  lekseIntroFerdig?.();
+}
+
+async function visLekseIntro(): Promise<void> {
+  avbrytLekseIntro();
+  const intro = lekseIntro(sisteStiRapport);
+  const kort = $("lekse-intro");
+  $("oppgave-kort").hidden = true;
+  $("melkebod").hidden = true;
+  $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
+  kort.hidden = false;
+  kort.classList.toggle("har-trafikk", intro.visTrafikk);
+  kort.classList.toggle("har-baesj", intro.visBaesj);
+  $("lekse-intro-tittel").textContent = intro.overskrift;
+  $("lekse-intro-tekst").innerHTML = intro.avsnitt.map((linje) => `<p>${linje}</p>`).join("");
+  const hund = $("lekse-intro-alf") as HTMLImageElement;
+  hund.src = bildeUrl("alf.svg");
+  hund.alt = "Alf";
+  if (innstillinger.lydPa) si(intro.tale, true);
+  await new Promise<void>((resolve) => {
+    const knapp = $("lekse-intro-videre");
+    const ferdig = () => {
+      if (lekseIntroFerdig !== ferdig) return;
+      lekseIntroFerdig = null;
+      knapp.removeEventListener("click", ferdig);
+      kort.hidden = true;
+      stoppTale();
+      resolve();
+    };
+    lekseIntroFerdig = ferdig;
+    knapp.addEventListener("click", ferdig);
+  });
+}
+
 function visOppgave(oppgave: Oppgave, overskrift: string): void {
   svarVakt.slipp();
   $("skjerm-spill").classList.remove("paa-sti");
   $("sti-spill").hidden = true;
   $("oppgave-kort").hidden = false;
+  $("lekse-intro").hidden = true;
   $("melkebod").hidden = true;
   $("skjerm-spill").classList.toggle("tegn-modus", oppgave.type === "tegning");
   $("oppgave-kicker").textContent = overskrift;
-  $("oppgave-tekst").textContent = oppgave.prompt;
+  $("oppgave-tekst").innerHTML = htmlMedSitertOrd(oppgave.prompt);
   $("hint-linje").textContent = "";
   $("bilde-felt").hidden = !oppgave.bilde;
   if (oppgave.bilde) $("bilde-felt").textContent = bildeEmoji(oppgave.bilde);
@@ -394,6 +440,8 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
       if (!tur) return;
       visLekseStopp(tur.stopp);
       oppdaterHud();
+      await visLekseIntro();
+      if (nr !== startLopenr || !turKanFortsette(tur)) return;
       await nesteOppgave();
       return;
     }
@@ -426,6 +474,7 @@ async function startZombieDuell(fraSti = false): Promise<void> {
     : "En zombie vagger ut fra grøfta!";
   visLekseZombie(true);
   $("oppgave-kort").hidden = false;
+  $("lekse-intro").hidden = true;
   await nesteOppgave();
 }
 
@@ -437,8 +486,9 @@ async function videreEtterStopp(): Promise<void> {
     return;
   }
   $("oppgave-kort").hidden = true;
+  $("lekse-intro").hidden = true;
   $("skjerm-spill").classList.remove("tegn-modus");
-    $("skjerm-spill").classList.remove("paa-sti");
+  $("skjerm-spill").classList.remove("paa-sti");
   $("hint-linje").textContent = "Videre mot skolen! Se opp for trafikk og zombier.";
   const nr = startLopenr;
   if (await spillSti()) {
@@ -449,6 +499,8 @@ async function videreEtterStopp(): Promise<void> {
   if (nr !== startLopenr || !turKanFortsette(tur)) return;
   visLekseStopp(tur.stopp);
   oppdaterHud();
+  await visLekseIntro();
+  if (nr !== startLopenr || !turKanFortsette(tur)) return;
   await nesteOppgave();
 }
 
@@ -461,6 +513,7 @@ async function visMelkebod(): Promise<void> {
   iDuell = false;
   $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
   $("oppgave-kort").hidden = true;
+  $("lekse-intro").hidden = true;
   $("valg").innerHTML = "";
   $("oppgave-tekst").textContent = "";
   $("hint-linje").textContent = "";
@@ -505,21 +558,21 @@ function forberedTegning(bokstav: string): void {
   const wrap = $("tegne-wrap");
   const css = Math.max(110, Math.min(wrap.clientWidth || 160, wrap.clientHeight || 160, 200));
   for (const c of [lerret, ghost]) {
-    c.width = css * dpr;
-    c.height = css * dpr;
+    c.width = Math.round(css * dpr);
+    c.height = Math.round(css * dpr);
     c.style.width = "100%";
     c.style.height = "100%";
   }
-  gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  gctx.clearRect(0, 0, css, css);
-  ctx.clearRect(0, 0, css, css);
-  gctx.font = `${Math.floor(css * 0.7)}px Georgia, serif`;
+  gctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  gctx.clearRect(0, 0, ghost.width, ghost.height);
+  ctx.clearRect(0, 0, lerret.width, lerret.height);
+  gctx.font = `${Math.floor(css * 0.7 * dpr)}px Georgia, serif`;
   gctx.textAlign = "center";
   gctx.textBaseline = "middle";
-  gctx.lineWidth = 8;
+  gctx.lineWidth = 8 * dpr;
   gctx.strokeStyle = "rgba(244, 210, 122, 0.35)";
-  gctx.strokeText(bokstav, css / 2, css / 2 + 8);
+  gctx.strokeText(bokstav, ghost.width / 2, ghost.height / 2);
 }
 
 function bindTegning(): void {
@@ -527,7 +580,7 @@ function bindTegning(): void {
   const ctx = () => lerret.getContext("2d");
   const punkt = (e: PointerEvent) => {
     const r = lerret.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    return lerretPunkt(e.clientX, e.clientY, r, lerret.width, lerret.height);
   };
   lerret.addEventListener("pointerdown", (e) => {
     tegner = true;
@@ -537,7 +590,7 @@ function bindTegning(): void {
     const p = punkt(e);
     c.beginPath();
     c.moveTo(p.x, p.y);
-    c.lineWidth = 14;
+    c.lineWidth = 14 * (window.devicePixelRatio || 1);
     c.lineCap = "round";
     c.strokeStyle = "#f4d27a";
   });
@@ -558,6 +611,7 @@ function bindTegning(): void {
     const lerret = $("tegn") as HTMLCanvasElement;
     const ctx = lerret.getContext("2d");
     if (!ctx || !aktivOppgave?.omriss) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, lerret.width, lerret.height);
   });
   $("tegn-sjekk").addEventListener("click", () => void sjekkTegning());
@@ -568,6 +622,7 @@ function bindTegning(): void {
   });
   $("hjem-fra-spill").addEventListener("click", () => {
     startLopenr += 1;
+    avbrytLekseIntro();
     stiPauset = false;
     stoppTimer();
     stoppTale();
@@ -577,6 +632,7 @@ function bindTegning(): void {
     duellFraSti = false;
     $("sti-start").hidden = true;
     $("sti-spill").hidden = true;
+    $("lekse-intro").hidden = true;
     $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
     tur = null;
     vis("skjerm-meny");
@@ -880,6 +936,7 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
   $("skjerm-spill").classList.add("paa-sti");
   panel.hidden = false;
   $("oppgave-kort").hidden = true;
+  $("lekse-intro").hidden = true;
   $("sti-alf").classList.remove("skitten", "truffet", "glad");
   $("sti-alf").classList.add("gaar");
   $("sti-spill").classList.remove("humper");
@@ -938,6 +995,11 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
     stiRamme = requestAnimationFrame(steg);
   });
   if (tur) oppdaterHud();
+  sisteStiRapport = {
+    sykler: tilstand.sykler ?? 0,
+    biler: tilstand.biler ?? 0,
+    baesj: tilstand.baesj ?? 0,
+  };
   const duell = tilstand.zombieTreff > 0;
   if (duell) {
     pausetSti = tilstand;
@@ -1036,7 +1098,7 @@ function visStemmeStatus(status: AlfStemmeStatus): void {
 
 settStemme(innstillinger.stemme);
 onAlfStemmeStatus(visStemmeStatus);
-if (innstillinger.stemme === ALF_STEMME) void lastAlfStemme();
+void lastAlfStemme();
 if (typeof speechSynthesis !== "undefined") {
   speechSynthesis.getVoices();
   speechSynthesis.addEventListener("voiceschanged", () => {

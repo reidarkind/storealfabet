@@ -233,6 +233,23 @@ describe("sti", () => {
     expect(hendelser[0]?.objekt).toBe("syklist");
     expect(hendelser[0]?.tekst).toBeTruthy();
     expect(tilstand.ferdig).toBe(false);
+    expect(tilstand.sykler).toBe(1);
+    expect(tilstand.biler).toBe(0);
+  });
+
+  it("teller biler og sykler hver for seg", () => {
+    const t = settX(
+      {
+        ...startSti(),
+        objekter: [nær(0.5, "bil")],
+      },
+      0.5,
+    );
+    const { tilstand } = stiTick(t, 0.01, () => 0.2);
+    expect(tilstand.biler).toBe(1);
+    expect(tilstand.sykler).toBe(0);
+    expect(startSti().sykler).toBe(0);
+    expect(startSti().biler).toBe(0);
   });
 
   it("lar syklisten sykle mot Alf", () => {

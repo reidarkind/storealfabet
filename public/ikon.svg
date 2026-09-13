@@ -12,10 +12,6 @@
       <stop offset="0" stop-color="#fff8e6"/>
       <stop offset="1" stop-color="#f0d59a"/>
     </linearGradient>
-    <linearGradient id="rosa" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f0a0b4"/>
-      <stop offset="1" stop-color="#c45c7a"/>
-    </linearGradient>
   </defs>
 
   <rect width="512" height="512" fill="url(#himmel)"/>
@@ -23,45 +19,36 @@
   <circle cx="440" cy="52" r="2.5" fill="#fff4dc" opacity=".85"/>
   <circle cx="400" cy="96" r="2" fill="#f4d27a"/>
   <circle cx="48" cy="128" r="2" fill="#fff4dc" opacity=".7"/>
+  <circle cx="470" cy="160" r="2" fill="#fff4dc" opacity=".6"/>
 
-  <g transform="translate(18 228) scale(0.7)">
-    <path d="M38 36c8-28 28-24 26 6" fill="#5d7a48"/>
-    <circle cx="78" cy="78" r="58" fill="#7c9a5c"/>
-    <circle cx="58" cy="72" r="22" fill="#f4f0c8"/>
-    <circle cx="102" cy="76" r="24" fill="#f4f0c8"/>
-    <circle cx="60" cy="74" r="9" fill="#2a1840"/>
-    <circle cx="104" cy="78" r="10" fill="#2a1840"/>
-    <circle cx="55" cy="68" r="3" fill="#fff"/>
-    <circle cx="99" cy="72" r="3.2" fill="#fff"/>
-    <path d="M64 104c10 12 28 12 38-2" stroke="#2a1840" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="92" cy="108" r="4" fill="#c45c7a"/>
+  <g transform="translate(18 8) scale(2.16)">
+    <ellipse cx="110" cy="200" rx="58" ry="12" fill="#120e22" opacity=".35"/>
+    <ellipse cx="92" cy="168" rx="22" ry="14" fill="#c9843a"/>
+    <ellipse cx="138" cy="170" rx="22" ry="14" fill="#c9843a"/>
+    <ellipse cx="112" cy="150" rx="48" ry="38" fill="#e8b86a"/>
+    <ellipse cx="112" cy="148" rx="38" ry="28" fill="#f3c984"/>
+    <path d="M48 78c8-38 28-52 40-28 4 10-2 32-10 48-14 6-28-2-30-20z" fill="#d4923f"/>
+    <path d="M172 78c-8-38-28-52-40-28-4 10 2 32 10 48 14 6 28-2 30-20z" fill="#d4923f"/>
+    <circle cx="110" cy="92" r="46" fill="#f3c984"/>
+    <circle cx="110" cy="96" r="36" fill="#ffe4a8"/>
+    <circle cx="92" cy="90" r="8" fill="#3a2410"/>
+    <circle cx="128" cy="90" r="8" fill="#3a2410"/>
+    <circle cx="94" cy="88" r="2.4" fill="#fff"/>
+    <circle cx="130" cy="88" r="2.4" fill="#fff"/>
+    <ellipse cx="110" cy="108" rx="9" ry="6" fill="#5b3318"/>
+    <path d="M101 118c6 8 12 8 18 0" stroke="#5b3318" stroke-width="3" stroke-linecap="round"/>
+    <path d="M78 104c6 6 8 8 4 14" stroke="#e07a7a" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+    <path d="M142 104c-6 6-8 8-4 14" stroke="#e07a7a" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+    <rect x="86" y="128" width="52" height="36" rx="10" fill="#6b3fa0"/>
+    <rect x="86" y="128" width="52" height="10" fill="#f4d27a"/>
+    <circle cx="112" cy="148" r="5" fill="#f4d27a"/>
+    <path d="M168 142c18 8 22 28 8 34-16-8-20-22-8-34z" fill="#e8b86a"/>
   </g>
 
   <g font-family="Nunito, Segoe UI, Arial Black, sans-serif" font-weight="900" text-anchor="middle">
-    <rect x="72" y="58" width="96" height="96" rx="20" fill="url(#krem)" stroke="#f4d27a" stroke-width="6"/>
-    <text x="120" y="128" font-size="64" fill="#3a2410">B</text>
-    <rect x="178" y="28" width="156" height="156" rx="28" fill="url(#gull)" stroke="#fff4dc" stroke-width="8"/>
-    <text x="256" y="140" font-size="108" fill="#3a2410">A</text>
-    <rect x="344" y="58" width="96" height="96" rx="20" fill="url(#rosa)" stroke="#f4d27a" stroke-width="6"/>
-    <text x="392" y="128" font-size="64" fill="#fff4dc">C</text>
-  </g>
-
-  <g transform="translate(136 214)">
-    <ellipse cx="120" cy="268" rx="80" ry="16" fill="#120e22" opacity=".28"/>
-    <path d="M42 70c9-42 32-58 46-30 5 11-2 35-11 52-16 7-32-2-35-22z" fill="#d4923f"/>
-    <path d="M198 70c-9-42-32-58-46-30-5 11 2 35 11 52 16 7 32-2 35-22z" fill="#d4923f"/>
-    <circle cx="120" cy="118" r="70" fill="#f3c984"/>
-    <circle cx="120" cy="124" r="54" fill="#ffe4a8"/>
-    <circle cx="94" cy="114" r="12" fill="#3a2410"/>
-    <circle cx="146" cy="114" r="12" fill="#3a2410"/>
-    <circle cx="97" cy="110" r="3.5" fill="#fff"/>
-    <circle cx="149" cy="110" r="3.5" fill="#fff"/>
-    <ellipse cx="120" cy="140" rx="12" ry="8" fill="#5b3318"/>
-    <path d="M106 156c8 12 20 12 28 0" stroke="#5b3318" stroke-width="6" stroke-linecap="round"/>
-    <path d="M76 134c8 8 10 10 5 18" stroke="#e07a7a" stroke-width="7" stroke-linecap="round" opacity=".5"/>
-    <path d="M164 134c-8 8-10 10-5 18" stroke="#e07a7a" stroke-width="7" stroke-linecap="round" opacity=".5"/>
-    <rect x="82" y="178" width="76" height="50" rx="14" fill="#6b3fa0"/>
-    <rect x="82" y="178" width="76" height="14" rx="7" fill="#f4d27a"/>
-    <circle cx="120" cy="208" r="7" fill="#f4d27a"/>
+    <rect x="18" y="18" width="52" height="52" rx="12" fill="url(#krem)" stroke="#f4d27a" stroke-width="4"/>
+    <text x="44" y="55" font-size="34" fill="#3a2410">A</text>
+    <rect x="442" y="18" width="52" height="52" rx="12" fill="url(#gull)" stroke="#fff4dc" stroke-width="4"/>
+    <text x="468" y="55" font-size="34" fill="#3a2410">B</text>
   </g>
 </svg>

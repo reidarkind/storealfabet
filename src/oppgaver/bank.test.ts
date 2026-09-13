@@ -57,6 +57,24 @@ describe("oppgavebank", () => {
     expect(ALLE_OPPGAVER.filter((o) => o.nivaa === "utfordrende").length).toBeGreaterThanOrEqual(80);
   });
 
+  it("siterer ordet i spørsmål om lyd, rim, stavelser og bytte", () => {
+    const slutt = ALLE_OPPGAVER.find((o) => o.id === "f-sist-de");
+    expect(slutt?.prompt).toMatch(/«de»/);
+    expect(slutt?.prompt).not.toMatch(/slutter de på/);
+
+    const aktuelle = ALLE_OPPGAVER.filter(
+      (o) =>
+        o.type === "forstelyd" ||
+        o.type === "stavelser" ||
+        o.type === "rim" ||
+        o.type === "byttLyd" ||
+        (o.type === "manglende" && o.id.startsWith("u-mang-")),
+    );
+    for (const oppgave of aktuelle) {
+      expect(oppgave.prompt, oppgave.id).toMatch(/«[^»]+»/);
+    }
+  });
+
   it("blandet kan trekke fra alle nivåer", () => {
     const sett = new Set<string>();
     for (let i = 0; i < 40; i++) {

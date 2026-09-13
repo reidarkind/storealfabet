@@ -1,4 +1,5 @@
 import type { Nivaa, Oppgave, OppgaveType } from "../typer";
+import { siterOrd } from "./sitat";
 
 export const LYDRETTE_ORD_LISTE = [
   "is",
@@ -291,10 +292,10 @@ function forstelyder(): Oppgave[] {
         nivaa: "forste",
         prompt: mal(
           [
-            `Hva begynner ${rad.ord} på?`,
-            `Hvilken bokstav hører du først i ${rad.ord}?`,
-            `Hvilken lyd starter ordet ${rad.ord} med?`,
-            `Første bokstav i ${rad.ord}?`,
+            `Hva begynner ${siterOrd(rad.ord)} på?`,
+            `Hvilken bokstav hører du først i ${siterOrd(rad.ord)}?`,
+            `Hvilken lyd starter ordet ${siterOrd(rad.ord)} med?`,
+            `Første bokstav i ${siterOrd(rad.ord)}?`,
           ],
           `forst-${rad.ord}`,
         ),
@@ -313,10 +314,10 @@ function forstelyder(): Oppgave[] {
         nivaa: i % 2 === 0 ? "forste" : "andre",
         prompt: mal(
           [
-            `Hvilken bokstav slutter ${rad.ord} på?`,
-            `Hvilken lyd hører du sist i ${rad.ord}?`,
-            `Siste bokstav i ${rad.ord}?`,
-            `${rad.ord} ender på …?`,
+            `Hvilken bokstav slutter ${siterOrd(rad.ord)} på?`,
+            `Hvilken lyd hører du sist i ${siterOrd(rad.ord)}?`,
+            `Siste bokstav i ${siterOrd(rad.ord)}?`,
+            `${siterOrd(rad.ord)} ender på …?`,
           ],
           `sist-${rad.ord}`,
         ),
@@ -343,9 +344,9 @@ function midtlyder(): Oppgave[] {
         nivaa: "andre",
         prompt: mal(
           [
-            `Hvilken bokstav hører du midt i ${ord}?`,
-            `Hvilken lyd er i midten av ${ord}?`,
-            `${ord}: bokstaven i midten?`,
+            `Hvilken bokstav hører du midt i ${siterOrd(ord)}?`,
+            `Hvilken lyd er i midten av ${siterOrd(ord)}?`,
+            `${siterOrd(ord)}: bokstaven i midten?`,
           ],
           `midt-${ord}`,
         ),
@@ -477,7 +478,7 @@ function rim(): Oppgave[] {
             type: "rim",
             nivaa: "andre",
             prompt: mal(
-              [`Hva rimer på ${ord}?`, `Hvilket ord rimer med ${ord}?`, `Finn et rim til ${ord}.`],
+              [`Hva rimer på ${siterOrd(ord)}?`, `Hvilket ord rimer med ${siterOrd(ord)}?`, `Finn et rim til ${siterOrd(ord)}.`],
               `rim-${ord}`,
             ),
             tale: ord,
@@ -499,7 +500,7 @@ function rim(): Oppgave[] {
           {
             type: "rim",
             nivaa: "utfordrende",
-            prompt: `Hvilket ord rimer ikke med ${vis}?`,
+            prompt: `Hvilket ord rimer ikke med ${liste.slice(0, 3).map(siterOrd).join(", ")}?`,
             tale: `${vis}. Hvilket rimer ikke?`,
             valg,
             fasit: feil,
@@ -557,9 +558,9 @@ function stavelser(): Oppgave[] {
         nivaa: rad.nivaa,
         prompt: mal(
           [
-            `Hvor mange klapp har ordet ${rad.ord}?`,
-            `Klapp ordet ${rad.ord}. Hvor mange ganger?`,
-            `Hvor mange stavelser har ${rad.ord}?`,
+            `Hvor mange klapp har ordet ${siterOrd(rad.ord)}?`,
+            `Klapp ordet ${siterOrd(rad.ord)}. Hvor mange ganger?`,
+            `Hvor mange stavelser har ${siterOrd(rad.ord)}?`,
           ],
           rad.ord,
         ),
@@ -619,7 +620,7 @@ function finnOrd(): Oppgave[] {
           type: "byggOrd",
           nivaa: "forste",
           prompt: mal(
-            [`Hvilket ord begynner på ${stor}?`, `Hvilket ord starter med ${bokstav}?`, `Finn ordet som begynner på ${stor}.`],
+            [`Hvilket ord begynner på ${siterOrd(stor)}?`, `Hvilket ord starter med ${siterOrd(bokstav)}?`, `Finn ordet som begynner på ${siterOrd(stor)}.`],
             `finnstart-${bokstav}`,
           ),
           tale: `hvilket ord begynner på ${bokstav}`,
@@ -641,7 +642,7 @@ function finnOrd(): Oppgave[] {
         type: "byggOrd",
         nivaa: "andre",
         prompt: mal(
-          [`Hvilket ord slutter på ${bokstav}?`, `Finn ordet som ender på ${bokstav}.`, `Hvilket ord har ${bokstav} til slutt?`],
+          [`Hvilket ord slutter på ${siterOrd(bokstav)}?`, `Finn ordet som ender på ${siterOrd(bokstav)}.`, `Hvilket ord har ${siterOrd(bokstav)} til slutt?`],
           `finnslutt-${bokstav}`,
         ),
         tale: `hvilket ord slutter på ${bokstav}`,
@@ -678,9 +679,9 @@ function byttLyd(): Oppgave[] {
         nivaa: "utfordrende",
         prompt: mal(
           [
-            `Bytt ${rad.gammel} i ${rad.fra} med ${rad.ny}. Hva blir det?`,
-            `Bytt ut ${rad.gammel} med ${rad.ny} i ordet ${rad.fra}.`,
-            `${rad.fra}: bytt ${rad.gammel} til ${rad.ny}. Nytt ord?`,
+            `Bytt ${rad.gammel} i ${siterOrd(rad.fra)} med ${rad.ny}. Hva blir det?`,
+            `Bytt ut ${rad.gammel} med ${rad.ny} i ordet ${siterOrd(rad.fra)}.`,
+            `${siterOrd(rad.fra)}: bytt ${rad.gammel} til ${rad.ny}. Nytt ord?`,
           ],
           `bytt-${rad.fra}-${rad.ny}-${rad.til}`,
         ),
@@ -707,9 +708,9 @@ function manglende(): Oppgave[] {
           nivaa: "utfordrende",
           prompt: mal(
             [
-              `${ord}: ${vis} – hvilken bokstav mangler?`,
-              `Hør ${ord}. Fyll ut ${vis}.`,
-              `Hvilken bokstav skal stå i ${vis} for å lage ${ord}?`,
+              `${siterOrd(ord)}: ${vis} – hvilken bokstav mangler?`,
+              `Hør ${siterOrd(ord)}. Fyll ut ${vis}.`,
+              `Hvilken bokstav skal stå i ${vis} for å lage ${siterOrd(ord)}?`,
             ],
             `${ord}-${i}`,
           ),
@@ -783,7 +784,7 @@ function taBort(): Oppgave[] {
       {
         type: "byttLyd",
         nivaa: "utfordrende",
-        prompt: `Ta bort ${rad.bort} i ${rad.fra}. Hva blir igjen?`,
+        prompt: `Ta bort ${rad.bort} i ${siterOrd(rad.fra)}. Hva blir igjen?`,
         tale: `${rad.fra}. Ta bort ${rad.bort}.`,
         valg: rad.valg,
         fasit: rad.igjen,

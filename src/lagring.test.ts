@@ -24,17 +24,32 @@ function medMinne(innhold: Record<string, string>, kjor: () => void): void {
 }
 
 describe("lagring", () => {
-  it("bytter tvungen Alf og Compact Nora til telefonens stemme", () => {
+  it("bruker Alfs stemme som standard og bytter Compact Nora til Alf", () => {
+    medMinne({}, () => {
+      expect(lesLagring().innstillinger.stemme).toBe("alf");
+    });
     medMinne(
       {
         "storealfabet-v1": JSON.stringify({
-          innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "alf" },
+          innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "auto" },
           besteVerdi: 0,
           finesteMelk: "vanlig",
         }),
       },
       () => {
-        expect(lesLagring().innstillinger.stemme).toBe("auto");
+        expect(lesLagring().innstillinger.stemme).toBe("alf");
+      },
+    );
+    medMinne(
+      {
+        "storealfabet-v1": JSON.stringify({
+          innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "Microsoft Nora Compact" },
+          besteVerdi: 0,
+          finesteMelk: "vanlig",
+        }),
+      },
+      () => {
+        expect(lesLagring().innstillinger.stemme).toBe("alf");
       },
     );
   });

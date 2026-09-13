@@ -45,9 +45,10 @@ describe("stemmevalg", () => {
     expect(skalBrukeAlfStemme("alf")).toBe(true);
     expect(skalBrukeAlfStemme("")).toBe(false);
     expect(skalBrukeAlfStemme("auto")).toBe(false);
-    expect(migrerStemme("")).toBe("auto");
-    expect(migrerStemme("alf")).toBe("auto");
-    expect(migrerStemme("Microsoft Nora Compact")).toBe("auto");
+    expect(migrerStemme("")).toBe("alf");
+    expect(migrerStemme("auto")).toBe("alf");
+    expect(migrerStemme("alf")).toBe("alf");
+    expect(migrerStemme("Microsoft Nora Compact")).toBe("alf");
     expect(migrerStemme("Google norsk")).toBe("Google norsk");
     expect(velgTaleModus("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }])).toBe(
       "system",
@@ -81,5 +82,12 @@ describe("stemmevalg", () => {
     expect(forberedUttale("Hvilken bokstav sier aaa?")).toBe("Hvilken bokstav sier a?");
     expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).toMatch(/trekk sammen/i);
     expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).not.toMatch(/lll|eee|rrr/i);
+  });
+
+  it("tar en tenkepause før det siterte ordet", () => {
+    const ut = forberedUttale("Hvilken bokstav slutter «de» på?");
+    expect(ut).toMatch(/slutter\s+\.{3}\s+de\s+\.{3}\s+på/);
+    expect(ut).not.toContain("«");
+    expect(lesOppgave({ prompt: "Hvilken bokstav slutter «de» på?", tale: "de" })).toMatch(/\.{3}\s+de/);
   });
 });

@@ -39,6 +39,8 @@ export interface StiTilstand {
   diamanter: number;
   zombieTreff: number;
   baesj: number;
+  sykler: number;
+  biler: number;
   ferdig: boolean;
   zombieSpawnet: number;
 }
@@ -147,6 +149,8 @@ export function startSti(): StiTilstand {
     diamanter: 0,
     zombieTreff: 0,
     baesj: 0,
+    sykler: 0,
+    biler: 0,
     ferdig: false,
     zombieSpawnet: 1,
   };
@@ -261,6 +265,8 @@ export function stiTick(
   let diamanter = tilstand.diamanter;
   let zombieTreff = tilstand.zombieTreff;
   let baesj = tilstand.baesj;
+  let sykler = tilstand.sykler ?? 0;
+  let biler = tilstand.biler ?? 0;
   let zombieSpawnet = tilstand.zombieSpawnet;
   const beholdt: StiObjekt[] = [];
 
@@ -282,6 +288,8 @@ export function stiTick(
       zombieTreff += 1;
       hendelser.push({ type: "treff", objekt: "zombie" });
     } else if (objekt.type === "syklist" || objekt.type === "bil") {
+      if (objekt.type === "syklist") sykler += 1;
+      else biler += 1;
       hendelser.push({
         type: "trafikk",
         objekt: objekt.type,
@@ -344,6 +352,8 @@ export function stiTick(
       diamanter,
       zombieTreff,
       baesj,
+      sykler,
+      biler,
       zombieSpawnet,
       ferdig: tid <= 0 || zombieTreff > 0,
     },
