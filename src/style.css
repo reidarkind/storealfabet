@@ -107,14 +107,14 @@ body {
   display: none;
 }
 
-select {
-  font: inherit;
-  font-weight: 800;
-  border-radius: 1.1rem;
-  padding: 0.8rem 1rem;
-  background: #3d2a6e;
-  color: var(--krem);
-  border: 2px solid #f4d27a55;
+.stemme-grid {
+  grid-template-columns: 1fr;
+}
+
+.stemme-grid button {
+  min-height: 3.4rem;
+  font-size: 1.15rem;
+  text-align: center;
 }
 
 h1,

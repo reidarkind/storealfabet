@@ -99,11 +99,13 @@ function bindMeny(): void {
       markerSekk();
     });
   });
-  $("stemme-valg").addEventListener("change", () => {
-    const valg = $("stemme-valg") as HTMLSelectElement;
-    innstillinger = { ...innstillinger, stemme: valg.value || ALF_STEMME };
+  $("stemme-valg").addEventListener("click", (e) => {
+    const knapp = (e.target as HTMLElement).closest("[data-stemme]");
+    if (!(knapp instanceof HTMLButtonElement)) return;
+    innstillinger = { ...innstillinger, stemme: knapp.dataset.stemme || ALF_STEMME };
     settStemme(innstillinger.stemme);
     persist();
+    markerStemme();
     if (innstillinger.stemme === ALF_STEMME) void lastAlfStemme();
   });
   $("prov-stemme").addEventListener("click", () => {
@@ -130,21 +132,30 @@ function markerSekk(): void {
 }
 
 function fyllStemmer(): void {
-  const valg = $("stemme-valg") as HTMLSelectElement;
-  const stemmer = norskeStemmer();
-  valg.innerHTML = "";
-  const alf = document.createElement("option");
-  alf.value = ALF_STEMME;
-  alf.textContent = "Alfs stemme (anbefalt)";
-  valg.append(alf);
-  for (const stemme of stemmer) {
-    const opt = document.createElement("option");
-    opt.value = stemme.name;
-    opt.textContent = stemme.name;
-    valg.append(opt);
+  const felt = $("stemme-valg");
+  felt.innerHTML = "";
+  const knapper: { id: string; tekst: string }[] = [{ id: ALF_STEMME, tekst: "Alfs stemme (anbefalt)" }];
+  for (const stemme of norskeStemmer()) {
+    knapper.push({ id: stemme.name, tekst: stemme.name });
   }
-  valg.value = innstillinger.stemme || ALF_STEMME;
-  if (valg.value !== innstillinger.stemme) valg.value = ALF_STEMME;
+  for (const rad of knapper) {
+    const knapp = document.createElement("button");
+    knapp.type = "button";
+    knapp.dataset.stemme = rad.id;
+    knapp.textContent = rad.tekst;
+    felt.append(knapp);
+  }
+  markerStemme();
+}
+
+function markerStemme(): void {
+  const valgt = innstillinger.stemme || ALF_STEMME;
+  document.querySelectorAll<HTMLButtonElement>("#stemme-valg [data-stemme]").forEach((knapp) => {
+    const erValgt = knapp.dataset.stemme === valgt;
+    knapp.classList.toggle("valgt", erValgt);
+    knapp.setAttribute("aria-checked", String(erValgt));
+    knapp.setAttribute("role", "radio");
+  });
 }
 
 function markerNivaa(): void {

@@ -1,4 +1,4 @@
-import { aktiverAlfLyd, lastAlfStemme, spillAlfStemme, stoppAlfStemme } from "./alf-stemme";
+import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfStemme, stoppAlfStemme } from "./alf-stemme";
 
 let lydCtx: AudioContext | null = null;
 let taleKlar = false;
@@ -156,6 +156,11 @@ export function si(tekst: string, lydPa: boolean): void {
   if (!taleKlar) aktiverLyd();
   stoppTale();
   if (skalBrukeAlfStemme(valgtStemmeNavn)) {
+    if (!alfErKlar()) {
+      void lastAlfStemme();
+      siMedNettleser(tekst);
+      return;
+    }
     void spillAlfStemme(forberedUttale(tekst)).catch(() => siMedNettleser(tekst));
     return;
   }
