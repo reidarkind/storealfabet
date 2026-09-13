@@ -21,7 +21,7 @@
       <section id="skjerm-meny" class="skjerm">
         <p class="kicker">Alf til skolen</p>
         <h1>Alf har forsovet seg!</h1>
-        <p class="ingress">Hjelp hunden til skolen. Samle krystaller og diamanter. Pass deg for klønete zombier.</p>
+        <p class="ingress">Alf går mot skolen. Han glemte lekser i går, så han stopper underveis. Plukk steiner og hopp unna zombier.</p>
         <p id="rekord" class="rekord"></p>
         <p class="nivaa-linje">Nivå: <strong id="nivaa-vis">1. klasse</strong></p>
         <button type="button" id="knapp-spill" class="hoved">Kom igjen, Alf!</button>
@@ -39,6 +39,13 @@
           <button type="button" data-nivaa="andre">2. klasse</button>
           <button type="button" data-nivaa="utfordrende">Utfordrende</button>
           <button type="button" data-nivaa="blandet">Blandet</button>
+        </div>
+        <p>Alfs skolesekk</p>
+        <div class="nivaa-grid">
+          <button type="button" data-sekk="lilla">Lilla</button>
+          <button type="button" data-sekk="stjerne">Stjerne</button>
+          <button type="button" data-sekk="fotball">Fotball</button>
+          <button type="button" data-sekk="blomst">Blomst</button>
         </div>
         <button type="button" id="lyd-pa" class="sekundaer" aria-pressed="true">Lyd er på</button>
         <button type="button" data-tilbake class="tekst">Tilbake</button>
@@ -68,7 +75,23 @@
           <span class="stein">🔮 <b id="hud-krystall">0</b></span>
           <span class="stein poeng"><b id="hud-verdi">0</b></span>
         </header>
-        <div id="verden"></div>
+        <div class="verden-wrap">
+          <div id="verden"></div>
+          <div id="sti-spill" hidden>
+            <p id="sti-ur">40</p>
+            <p id="sti-hjelp">Trykk en bane. Samle steiner. Hopp unna zombier!</p>
+            <div id="sti-lag"></div>
+            <div id="sti-alf">
+              <img id="sti-alf-kropp" alt="Alf" />
+              <span id="sti-sekk" class="sekk-lilla"></span>
+            </div>
+            <div id="sti-baner">
+              <button type="button" data-bane="0" aria-label="Venstre"></button>
+              <button type="button" data-bane="1" aria-label="Midten"></button>
+              <button type="button" data-bane="2" aria-label="Høyre"></button>
+            </div>
+          </div>
+        </div>
         <p id="hint-linje" class="hint"></p>
         <article id="oppgave-kort" class="kort" hidden>
           <div class="kort-topp">
@@ -89,7 +112,10 @@
             <canvas id="tegn-ghost" width="260" height="260"></canvas>
             <canvas id="tegn" width="260" height="260"></canvas>
           </div>
-          <button type="button" id="tegn-sjekk" class="hoved" hidden>Sjekk tegningen</button>
+          <div id="tegn-knapper" class="tegn-knapper" hidden>
+            <button type="button" id="tegn-slett" class="sekundaer">Prøv på nytt</button>
+            <button type="button" id="tegn-sjekk" class="hoved">Sjekk tegningen</button>
+          </div>
         </article>
         <article id="melkebod" class="kort bod" hidden>
           <p class="kicker">Fremme ved skolen</p>

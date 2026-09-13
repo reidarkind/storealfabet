@@ -1,4 +1,4 @@
-import type { Innstillinger, Melk } from "./typer";
+import type { Innstillinger, Melk, Sekk } from "./typer";
 
 const NOKKEL = "storealfabet-v1";
 
@@ -9,7 +9,7 @@ export interface Lagret {
 }
 
 const STANDARD: Lagret = {
-  innstillinger: { nivaa: "forste", lydPa: true },
+  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla" },
   besteVerdi: 0,
   finesteMelk: "vanlig",
 };
@@ -22,6 +22,10 @@ function erMelk(verdi: unknown): verdi is Melk {
   return verdi === "vanlig" || verdi === "jordbaer" || verdi === "sjokolade" || verdi === "stjerne";
 }
 
+function erSekk(verdi: unknown): verdi is Sekk {
+  return verdi === "lilla" || verdi === "stjerne" || verdi === "fotball" || verdi === "blomst";
+}
+
 export function lesLagring(): Lagret {
   try {
     const raa = localStorage.getItem(NOKKEL);
@@ -29,9 +33,10 @@ export function lesLagring(): Lagret {
     const data = JSON.parse(raa) as Partial<Lagret>;
     const nivaa = erNivaa(data.innstillinger?.nivaa) ? data.innstillinger.nivaa : "forste";
     const lydPa = data.innstillinger?.lydPa !== false;
+    const sekk = erSekk(data.innstillinger?.sekk) ? data.innstillinger.sekk : "lilla";
     const besteVerdi = typeof data.besteVerdi === "number" && data.besteVerdi >= 0 ? data.besteVerdi : 0;
     const finesteMelk = erMelk(data.finesteMelk) ? data.finesteMelk : "vanlig";
-    return { innstillinger: { nivaa, lydPa }, besteVerdi, finesteMelk };
+    return { innstillinger: { nivaa, lydPa, sekk }, besteVerdi, finesteMelk };
   } catch {
     return { ...STANDARD, innstillinger: { ...STANDARD.innstillinger } };
   }

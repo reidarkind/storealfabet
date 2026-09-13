@@ -26,4 +26,4 @@ npm run preview
 
 ## Meny
 
-Spill, Innstillinger (1. klasse, 2. klasse, Utfordrende, Blandet, lyd), Rekord og Om appen. Alt på bokmål. Hjemskjerm-navnet er StoreAlfabet.
+Spill, Innstillinger (nivå, lyd og Alfs skolesekk), Rekord og Om appen. Alt på bokmål. Hjemskjerm-navnet er StoreAlfabet.

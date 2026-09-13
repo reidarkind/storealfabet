@@ -1,7 +1,7 @@
 import { registerSW } from "virtual:pwa-register";
 import "./style.css";
 import { lesLagring, oppdaterRekord, skrivLagring } from "./lagring";
-import { verdi } from "./okonomi";
+import { miltTap, verdi } from "./okonomi";
 import { sjekkSvar } from "./oppgaver/bank";
 import {
   avsluttDuell,
@@ -17,9 +17,10 @@ import {
   startTur,
 } from "./spill/tur";
 import { hentVerden, lagSpill } from "./spill/verden";
-import { harTale, si, spillKling, stoppTale } from "./tale/tale";
+import { startSti, stiTick, velgBane, type Bane, type StiTilstand } from "./spill/sti";
+import { aktiverLyd, harTale, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
-import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave } from "./typer";
+import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
 import type Phaser from "phaser";
 
@@ -35,6 +36,7 @@ let timerId = 0;
 let gjenstaende = TID;
 let spill: Phaser.Game | null = null;
 let tegner = false;
+let aktivSti: StiTilstand | null = null;
 
 function vis(id: string): void {
   document.querySelectorAll<HTMLElement>(".skjerm").forEach((el) => {
@@ -54,10 +56,14 @@ function oppdaterMeny(): void {
 }
 
 function bindMeny(): void {
-  $("knapp-spill").addEventListener("click", () => void startSpill());
+  $("knapp-spill").addEventListener("click", () => {
+    aktiverLyd();
+    void startSpill();
+  });
   $("knapp-innstillinger").addEventListener("click", () => {
     vis("skjerm-innstillinger");
     markerNivaa();
+    markerSekk();
     $("lyd-pa").setAttribute("aria-pressed", String(innstillinger.lydPa));
     $("lyd-pa").textContent = innstillinger.lydPa ? "Lyd er på" : "Lyd er av";
   });
@@ -79,6 +85,13 @@ function bindMeny(): void {
       markerNivaa();
     });
   });
+  document.querySelectorAll<HTMLButtonElement>("[data-sekk]").forEach((knapp) => {
+    knapp.addEventListener("click", () => {
+      innstillinger = { ...innstillinger, sekk: knapp.dataset.sekk as Sekk };
+      persist();
+      markerSekk();
+    });
+  });
   $("lyd-pa").addEventListener("click", () => {
     innstillinger = { ...innstillinger, lydPa: !innstillinger.lydPa };
     persist();
@@ -90,6 +103,12 @@ function bindMeny(): void {
 function persist(): void {
   const lagret = lesLagring();
   skrivLagring({ ...lagret, innstillinger });
+}
+
+function markerSekk(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-sekk]").forEach((knapp) => {
+    knapp.classList.toggle("valgt", knapp.dataset.sekk === innstillinger.sekk);
+  });
 }
 
 function markerNivaa(): void {
@@ -113,9 +132,10 @@ async function startSpill(): Promise<void> {
   oppdaterHud();
   $("oppgave-kort").hidden = true;
   $("melkebod").hidden = true;
-  $("hint-linje").textContent = "Alf har forsovet seg. Løp til skolen!";
-  await vent(400);
+  $("hint-linje").textContent = "Skolen er der framme. Alf glemte lekser i går.";
+  await vent(300);
   await hentVerden(spill)?.gaaTilStopp(1);
+  await spillSti();
   await nesteOppgave();
 }
 
@@ -131,6 +151,7 @@ async function nesteOppgave(): Promise<void> {
 function visOppgave(oppgave: Oppgave, overskrift: string): void {
   $("oppgave-kort").hidden = false;
   $("melkebod").hidden = true;
+  $("skjerm-spill").classList.toggle("tegn-modus", oppgave.type === "tegning");
   $("oppgave-kicker").textContent = overskrift;
   $("oppgave-tekst").textContent = oppgave.prompt;
   $("hint-linje").textContent = "";
@@ -144,11 +165,13 @@ function visOppgave(oppgave: Oppgave, overskrift: string): void {
     tegn.hidden = false;
     valg.hidden = true;
     $("tegn-sjekk").hidden = false;
+    $("tegn-knapper").hidden = false;
     forberedTegning(oppgave.omriss ?? "O");
   } else {
     tegn.hidden = true;
     valg.hidden = false;
     $("tegn-sjekk").hidden = true;
+    $("tegn-knapper").hidden = true;
     for (const tekst of oppgave.valg) {
       const b = document.createElement("button");
       b.type = "button";
@@ -257,6 +280,9 @@ async function videreEtterStopp(): Promise<void> {
     return;
   }
   $("oppgave-kort").hidden = true;
+  $("skjerm-spill").classList.remove("tegn-modus");
+  $("hint-linje").textContent = "Videre mot skolen! Plukk steiner og hopp unna zombier.";
+  await spillSti();
   await hentVerden(spill!)?.gaaTilStopp(tur.stopp);
   oppdaterHud();
   await nesteOppgave();
@@ -303,7 +329,8 @@ function forberedTegning(bokstav: string): void {
   const gctx = ghost.getContext("2d");
   if (!ctx || !gctx) return;
   const dpr = window.devicePixelRatio || 1;
-  const css = 260;
+  const wrap = $("tegne-wrap");
+  const css = Math.max(120, Math.min(200, Math.floor(wrap.clientWidth || 160)));
   for (const c of [lerret, ghost]) {
     c.width = css * dpr;
     c.height = css * dpr;
@@ -314,12 +341,12 @@ function forberedTegning(bokstav: string): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   gctx.clearRect(0, 0, css, css);
   ctx.clearRect(0, 0, css, css);
-  gctx.font = "180px Georgia, serif";
+  gctx.font = `${Math.floor(css * 0.7)}px Georgia, serif`;
   gctx.textAlign = "center";
   gctx.textBaseline = "middle";
   gctx.lineWidth = 8;
   gctx.strokeStyle = "rgba(244, 210, 122, 0.35)";
-  gctx.strokeText(bokstav, 130, 140);
+  gctx.strokeText(bokstav, css / 2, css / 2 + 8);
 }
 
 function bindTegning(): void {
@@ -354,6 +381,12 @@ function bindTegning(): void {
   };
   lerret.addEventListener("pointerup", slutt);
   lerret.addEventListener("pointercancel", slutt);
+  $("tegn-slett").addEventListener("click", () => {
+    const lerret = $("tegn") as HTMLCanvasElement;
+    const ctx = lerret.getContext("2d");
+    if (!ctx || !aktivOppgave?.omriss) return;
+    ctx.clearRect(0, 0, lerret.width, lerret.height);
+  });
   $("tegn-sjekk").addEventListener("click", () => void sjekkTegning());
   $("hoer").addEventListener("click", () => {
     if (!aktivOppgave) return;
@@ -363,6 +396,10 @@ function bindTegning(): void {
   $("hjem-fra-spill").addEventListener("click", () => {
     stoppTimer();
     stoppTale();
+    cancelAnimationFrame(stiRamme);
+    aktivSti = null;
+    $("sti-spill").hidden = true;
+    $("skjerm-spill").classList.remove("tegn-modus");
     tur = null;
     vis("skjerm-meny");
     oppdaterMeny();
@@ -389,6 +426,102 @@ async function sjekkTegning(): Promise<void> {
   await etterSvar(ok, aktivOppgave.hint);
 }
 
+let stiRamme = 0;
+
+function baneVenstre(bane: Bane): string {
+  return `${16 + bane * 34}%`;
+}
+
+function tegnSti(tilstand: StiTilstand): void {
+  $("sti-ur").textContent = String(Math.ceil(tilstand.tid));
+  const alf = $("sti-alf");
+  alf.style.left = baneVenstre(tilstand.bane);
+  alf.dataset.sekk = innstillinger.sekk;
+  const sekk = $("sti-sekk");
+  sekk.className = `sekk-${innstillinger.sekk}`;
+  const kropp = $("sti-alf-kropp") as HTMLImageElement;
+  if (!alf.classList.contains("glad")) {
+    kropp.src = `${import.meta.env.BASE_URL}alf-bak.png`;
+  }
+  const lag = $("sti-lag");
+  lag.innerHTML = "";
+  for (const objekt of tilstand.objekter) {
+    const el = document.createElement("img") as HTMLImageElement;
+    el.className = `sti-ting ${objekt.type}`;
+    el.style.left = baneVenstre(objekt.bane);
+    el.style.top = `${objekt.y * 100}%`;
+    el.src = objekt.type === "zombie"
+      ? `${import.meta.env.BASE_URL}zombie.svg`
+      : `${import.meta.env.BASE_URL}${objekt.type}.png`;
+    el.alt = objekt.type;
+    lag.append(el);
+  }
+}
+
+function visAlfGlad(): void {
+  const alf = $("sti-alf");
+  const kropp = $("sti-alf-kropp") as HTMLImageElement;
+  alf.classList.add("glad");
+  kropp.src = `${import.meta.env.BASE_URL}alf.svg`;
+  window.setTimeout(() => {
+    alf.classList.remove("glad");
+    kropp.src = `${import.meta.env.BASE_URL}alf-bak.png`;
+  }, 700);
+}
+
+async function spillSti(): Promise<void> {
+  const panel = $("sti-spill");
+  panel.hidden = false;
+  $("oppgave-kort").hidden = true;
+  aktivSti = startSti();
+  let tilstand = aktivSti;
+  tegnSti(tilstand);
+  await new Promise<void>((resolve) => {
+    let forrige = performance.now();
+    const steg = (naa: number) => {
+      const dt = Math.min(0.05, (naa - forrige) / 1000);
+      forrige = naa;
+      const resultat = stiTick(tilstand, dt);
+      tilstand = resultat.tilstand;
+      aktivSti = tilstand;
+      for (const hendelse of resultat.hendelser) {
+        if (hendelse.type === "plukk") {
+          spillKling(innstillinger.lydPa, hendelse.objekt === "diamant" ? 880 : 640);
+          visAlfGlad();
+        }
+        else spillKling(innstillinger.lydPa, 180);
+      }
+      tegnSti(tilstand);
+      if (tilstand.ferdig) {
+        resolve();
+        return;
+      }
+      stiRamme = requestAnimationFrame(steg);
+    };
+    stiRamme = requestAnimationFrame(steg);
+  });
+  if (tur) {
+    for (let i = 0; i < tilstand.krystaller; i++) tur = { ...tur, lomme: { ...tur.lomme, krystaller: tur.lomme.krystaller + 1 } };
+    for (let i = 0; i < tilstand.diamanter; i++) tur = { ...tur, lomme: { ...tur.lomme, diamanter: tur.lomme.diamanter + 1 } };
+    if (tilstand.zombieTreff > 0) tur = { ...tur, lomme: miltTap(tur.lomme, tilstand.zombieTreff) };
+    oppdaterHud();
+  }
+  aktivSti = null;
+  panel.hidden = true;
+}
+
+function bindSti(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-bane]").forEach((knapp) => {
+    knapp.addEventListener("click", () => {
+      if (!aktivSti) return;
+      const bane = Number(knapp.dataset.bane);
+      if (bane !== 0 && bane !== 1 && bane !== 2) return;
+      aktivSti = velgBane(aktivSti, bane);
+      tegnSti(aktivSti);
+    });
+  });
+}
+
 function vent(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -403,6 +536,7 @@ registerSW({ immediate: true });
 
 bindMeny();
 bindTegning();
+bindSti();
 oppdaterMeny();
 vis("skjerm-meny");
 visInstallasjon();

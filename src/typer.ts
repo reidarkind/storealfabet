@@ -2,6 +2,8 @@ export type Nivaa = "forste" | "andre" | "utfordrende" | "blandet";
 
 export type Melk = "vanlig" | "jordbaer" | "sjokolade" | "stjerne";
 
+export type Sekk = "lilla" | "stjerne" | "fotball" | "blomst";
+
 export type OppgaveType =
   | "bokstavlyd"
   | "forstelyd"
@@ -36,6 +38,7 @@ export interface Oppgave {
 export interface Innstillinger {
   nivaa: Nivaa;
   lydPa: boolean;
+  sekk: Sekk;
 }
 
 export const MELK_NAVN: Record<Melk, string> = {
@@ -43,6 +46,13 @@ export const MELK_NAVN: Record<Melk, string> = {
   jordbaer: "Jordbærmelke",
   sjokolade: "Sjokolademelk",
   stjerne: "Stjernemelk",
+};
+
+export const SEKK_NAVN: Record<Sekk, string> = {
+  lilla: "Lilla sekk",
+  stjerne: "Stjernesekk",
+  fotball: "Fotballsekk",
+  blomst: "Blomstersekk",
 };
 
 export const NIVAA_NAVN: Record<Nivaa, string> = {
