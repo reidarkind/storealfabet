@@ -10,11 +10,19 @@ import {
   registrerDuellSvar,
   registrerOppgaveSvar,
   startDuell,
+  startNedtelling,
   startTur,
   velgZombieStopp,
 } from "./tur";
 
 describe("tur", () => {
+  it("har 3-2-1 før veien starter", () => {
+    const steg = startNedtelling();
+    expect(steg.map((s) => s.tekst)).toEqual(["3", "2", "1", "Kom igjen!"]);
+    expect(steg.every((s) => s.ms >= 400)).toBe(true);
+    expect(steg.reduce((sum, s) => sum + s.ms, 0)).toBeGreaterThanOrEqual(2000);
+  });
+
   it("har aldri zombie på stopp 1 og maks to dueller", () => {
     for (let i = 0; i < 20; i++) {
       const stopp = velgZombieStopp(() => (i + 1) * 0.17);

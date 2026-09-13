@@ -6,4 +6,11 @@ describe("skjerm-synlighet", () => {
     const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
     expect(css).toMatch(/\.skjerm\[hidden\]\s*\{[^}]*display:\s*none/);
   });
+
+  it("dekker veien med startskjerm under 3-2-1", () => {
+    const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
+    expect(css).toMatch(/#sti-start\s*\{[^}]*position:\s*absolute/);
+    expect(css).toMatch(/#sti-start\s*\{[^}]*inset:\s*0/);
+    expect(css).toMatch(/#sti-start\[hidden\]\s*\{[^}]*display:\s*none/);
+  });
 });

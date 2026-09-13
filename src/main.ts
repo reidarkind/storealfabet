@@ -14,6 +14,7 @@ import {
   registrerDuellSvar,
   registrerOppgaveSvar,
   startDuell,
+  startNedtelling,
   startTur,
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
@@ -35,6 +36,8 @@ let gjenstaende = TID;
 let tegner = false;
 let aktivSti: StiTilstand | null = null;
 let duellFraSti = false;
+let stiPauset = false;
+let startLopenr = 0;
 
 function vis(id: string): void {
   document.querySelectorAll<HTMLElement>(".skjerm").forEach((el) => {
@@ -147,7 +150,6 @@ function markerNivaa(): void {
 }
 
 async function startSpill(): Promise<void> {
-  vis("skjerm-spill");
   tur = startTur(innstillinger);
   iDuell = false;
   duellFraSti = false;
@@ -158,8 +160,9 @@ async function startSpill(): Promise<void> {
   visLekseStopp(1);
   visLekseZombie(false);
   $("hint-linje").textContent = "Skolen er der framme. Alf glemte lekser i går.";
-  await vent(300);
-  if (await spillSti()) {
+  $("skjerm-spill").classList.add("paa-sti");
+  vis("skjerm-spill");
+  if (await spillSti(true)) {
     await startZombieDuell(true);
     return;
   }
@@ -474,13 +477,16 @@ function bindTegning(): void {
     else $("hint-linje").textContent = aktivOppgave.tale;
   });
   $("hjem-fra-spill").addEventListener("click", () => {
+    startLopenr += 1;
+    stiPauset = false;
     stoppTimer();
     stoppTale();
     cancelAnimationFrame(stiRamme);
     aktivSti = null;
     duellFraSti = false;
+    $("sti-start").hidden = true;
     $("sti-spill").hidden = true;
-    $("skjerm-spill").classList.remove("tegn-modus");
+    $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
     tur = null;
     vis("skjerm-meny");
     oppdaterMeny();
@@ -743,7 +749,31 @@ function visAlfTrafikk(hendelse: StiHendelse): void {
   }, 800);
 }
 
-async function spillSti(): Promise<boolean> {
+async function visStartNedtelling(): Promise<boolean> {
+  startLopenr += 1;
+  const lopenr = startLopenr;
+  const overlay = $("sti-start");
+  const tall = $("sti-start-tall");
+  overlay.hidden = false;
+  await ventRamme();
+  if (aktivSti) tegnSti(aktivSti);
+  for (const steg of startNedtelling()) {
+    if (startLopenr !== lopenr) return false;
+    tall.textContent = steg.tekst;
+    tall.classList.toggle("ord", steg.tekst.length > 1);
+    $("sti-start-under").textContent = steg.tekst === "Kom igjen!" ? "Alf går!" : "Alf er klar";
+    if (innstillinger.lydPa) {
+      if (steg.tekst === "Kom igjen!") si("Kom igjen, Alf!", true);
+      else spillKling(true, 480 + Number(steg.tekst) * 90);
+    }
+    await vent(steg.ms);
+  }
+  if (startLopenr !== lopenr) return false;
+  overlay.hidden = true;
+  return true;
+}
+
+async function spillSti(medStart = false): Promise<boolean> {
   const panel = $("sti-spill");
   $("skjerm-spill").classList.add("paa-sti");
   panel.hidden = false;
@@ -752,10 +782,18 @@ async function spillSti(): Promise<boolean> {
   $("sti-alf").classList.add("gaar");
   $("sti-spill").classList.remove("humper");
   $("sti-treff").hidden = true;
+  if (!medStart) $("sti-start").hidden = true;
   $("sti-lag").innerHTML = "";
   aktivSti = startSti();
   let tilstand = aktivSti;
   tegnSti(tilstand);
+  if (medStart) {
+    stiPauset = true;
+    const ok = await visStartNedtelling();
+    stiPauset = false;
+    if (!ok || !aktivSti) return false;
+    tilstand = aktivSti;
+  }
   await new Promise<void>((resolve) => {
     let forrige = performance.now();
     const steg = (naa: number) => {
@@ -820,17 +858,17 @@ function styrAlf(klientX: number): void {
 function bindSti(): void {
   const panel = $("sti-spill");
   panel.addEventListener("pointerdown", (e) => {
-    if (!aktivSti || panel.hidden) return;
+    if (!aktivSti || stiPauset || panel.hidden) return;
     styrAlf(e.clientX);
   });
   panel.addEventListener("pointermove", (e) => {
-    if (!aktivSti || panel.hidden) return;
+    if (!aktivSti || stiPauset || panel.hidden) return;
     if (e.pointerType === "mouse" && e.buttons === 0) return;
     styrAlf(e.clientX);
   });
 
   window.addEventListener("keydown", (e) => {
-    if (!aktivSti) return;
+    if (!aktivSti || stiPauset) return;
     if (e.key === "ArrowLeft") {
       aktivSti = flyttX(aktivSti, -0.08);
       tegnSti(aktivSti);
@@ -844,6 +882,12 @@ function bindSti(): void {
 
 function vent(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function ventRamme(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
 }
 
 function visInstallasjon(): void {

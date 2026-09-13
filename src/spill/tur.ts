@@ -6,6 +6,20 @@ export const ANTALL_STOPP = 6;
 export const DUELL_RUNDE = 3;
 export const DUELL_TRENGER = 2;
 
+export interface StartSteg {
+  tekst: string;
+  ms: number;
+}
+
+export function startNedtelling(): StartSteg[] {
+  return [
+    { tekst: "3", ms: 700 },
+    { tekst: "2", ms: 700 },
+    { tekst: "1", ms: 700 },
+    { tekst: "Kom igjen!", ms: 550 },
+  ];
+}
+
 export interface Tur {
   nivaa: Nivaa;
   lydPa: boolean;
