@@ -218,6 +218,8 @@ async function nesteOppgave(): Promise<void> {
 
 function visOppgave(oppgave: Oppgave, overskrift: string): void {
   svarVakt.slipp();
+  $("skjerm-spill").classList.remove("paa-sti");
+  $("sti-spill").hidden = true;
   $("oppgave-kort").hidden = false;
   $("melkebod").hidden = true;
   $("skjerm-spill").classList.toggle("tegn-modus", oppgave.type === "tegning");
@@ -843,7 +845,6 @@ function visAlfTrafikk(hendelse: StiHendelse): void {
 }
 
 async function visStartNedtelling(): Promise<boolean> {
-  startLopenr += 1;
   const lopenr = startLopenr;
   const overlay = $("sti-start");
   const tall = $("sti-start-tall");
