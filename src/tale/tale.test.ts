@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { erNorskLang, forberedUttale, stemmeRang, velgBesteStemme } from "./tale";
+import { erNorskLang, forberedUttale, migrerStemme, skalBrukeAlfStemme, stemmeRang, velgBesteStemme } from "./tale";
 
 describe("stemmevalg", () => {
   it("kjenner igjen norsk språk", () => {
@@ -28,6 +28,16 @@ describe("stemmevalg", () => {
       stemmeRang("Microsoft Nora Compact", "nb-NO"),
     );
     expect(stemmeRang("Henrik", "nb-NO")).toBeGreaterThan(stemmeRang("Nora", "nn-NO"));
+  });
+
+  it("bruker Alfs stemme i stedet for Nora", () => {
+    expect(skalBrukeAlfStemme("alf")).toBe(true);
+    expect(skalBrukeAlfStemme("")).toBe(true);
+    expect(migrerStemme("")).toBe("alf");
+    expect(migrerStemme("Microsoft Nora")).toBe("alf");
+    expect(migrerStemme("Microsoft Nora Compact")).toBe("alf");
+    expect(migrerStemme("Microsoft Hedda")).toBe("alf");
+    expect(migrerStemme("Google norsk")).toBe("Google norsk");
   });
 
   it("retter trykk på vanlige norske spillord", () => {

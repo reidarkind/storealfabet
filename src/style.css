@@ -93,9 +93,19 @@ body {
   display: none;
 }
 
-.stemme-hjelp {
+.stemme-hjelp,
+.stemme-status {
   font-size: 0.95rem;
   line-height: 1.4;
+}
+
+.stemme-status {
+  margin: 0;
+  color: var(--gull);
+}
+
+.stemme-status[hidden] {
+  display: none;
 }
 
 select {

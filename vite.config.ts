@@ -29,6 +29,9 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    include: ["onnxruntime-web/wasm"],
+  },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],

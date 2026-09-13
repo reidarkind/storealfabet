@@ -24,6 +24,7 @@
         <p class="ingress">Alf går mot skolen. Han glemte lekser i går, så han stopper underveis. Plukk steiner og hopp unna zombier.</p>
         <p id="rekord" class="rekord"></p>
         <p class="nivaa-linje">Nivå: <strong id="nivaa-vis">1. klasse</strong></p>
+        <p id="meny-stemme-status" class="stemme-status" hidden></p>
         <button type="button" id="knapp-spill" class="hoved">Kom igjen, Alf!</button>
         <button type="button" id="knapp-innstillinger" class="sekundaer">Innstillinger</button>
         <button type="button" id="knapp-rekord" class="sekundaer">Rekord</button>
@@ -51,7 +52,8 @@
         <button type="button" id="lyd-pa" class="sekundaer" aria-pressed="true">Lyd er på</button>
         <label for="stemme-valg">Stemme</label>
         <select id="stemme-valg" aria-label="Velg stemme"></select>
-        <p class="stemme-hjelp">Telefonen leser høyt. Microsoft-stemmer på PC trykker ofte feil på norske ord. På iPhone: Innstillinger, Hjelpemidler, Opplest innhold, Stemmer, last ned norsk. På Android: last ned norsk i Google Tale.</p>
+        <p id="stemme-status" class="stemme-status" hidden></p>
+        <p class="stemme-hjelp">Alfs stemme følger appen. Første gang kan det ta et minutt, siden slipper du å lete etter stemmer på telefonen.</p>
         <button type="button" id="prov-stemme" class="sekundaer">Prøv stemmen</button>
         <button type="button" data-tilbake class="tekst">Tilbake</button>
       </section>

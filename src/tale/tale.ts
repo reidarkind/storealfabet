@@ -1,9 +1,28 @@
+import { aktiverAlfLyd, lastAlfStemme, spillAlfStemme, stoppAlfStemme } from "./alf-stemme";
+
 let lydCtx: AudioContext | null = null;
 let taleKlar = false;
 let valgtStemmeNavn = "";
 
+export const ALF_STEMME = "alf";
+
+export function skalBrukeAlfStemme(navn: string): boolean {
+  return navn === ALF_STEMME || navn === "";
+}
+
+export function migrerStemme(navn: string): string {
+  if (skalBrukeAlfStemme(navn)) return ALF_STEMME;
+  const n = navn.toLowerCase();
+  if (/microsoft|hedda|compact/.test(n) && /nora|hedda|compact/.test(n)) return ALF_STEMME;
+  return navn;
+}
+
 export function harTale(): boolean {
   return typeof globalThis.speechSynthesis !== "undefined";
+}
+
+export function kanSnakke(): boolean {
+  return skalBrukeAlfStemme(valgtStemmeNavn) || harTale();
 }
 
 export function settStemme(navn: string): void {
@@ -35,7 +54,9 @@ export function velgBesteStemme<T extends { name: string; lang: string }>(
   onsket = "",
 ): T | undefined {
   if (onsket) {
-    const treff = stemmer.find((s) => s.name === onsket);
+    const treff = stemmer.find(
+      (s) => s.name === onsket || ("voiceURI" in s && (s as { voiceURI: string }).voiceURI === onsket),
+    );
     if (treff) return treff;
   }
   const norsk = stemmer.filter((s) => erNorskLang(s.lang));
@@ -48,7 +69,9 @@ export function velgBesteStemme<T extends { name: string; lang: string }>(
 export function norskeStemmer(): SpeechSynthesisVoice[] {
   if (!harTale()) return [];
   const alle = speechSynthesis.getVoices();
-  const norsk = alle.filter((s) => erNorskLang(s.lang));
+  const norsk = alle.filter(
+    (s) => erNorskLang(s.lang) || /norsk|norwegian|bokmål|bokmal|henrik|nora/i.test(s.name),
+  );
   return (norsk.length > 0 ? norsk : alle).sort(
     (a, b) => stemmeRang(b.name, b.lang) - stemmeRang(a.name, a.lang) || a.name.localeCompare(b.name, "nb"),
   );
@@ -95,25 +118,24 @@ export function aktiverLyd(): void {
   if (ctx && ctx.state === "suspended") {
     void ctx.resume();
   }
-  if (!harTale()) {
-    taleKlar = true;
-    return;
+  aktiverAlfLyd();
+  if (skalBrukeAlfStemme(valgtStemmeNavn)) void lastAlfStemme();
+  if (harTale()) {
+    speechSynthesis.getVoices();
+    speechSynthesis.cancel();
+    const varm = new SpeechSynthesisUtterance(" ");
+    varm.lang = "nb-NO";
+    varm.volume = 0.01;
+    varm.rate = 2;
+    const stemme = finnStemme();
+    if (stemme) varm.voice = stemme;
+    speechSynthesis.speak(varm);
   }
-  speechSynthesis.getVoices();
-  speechSynthesis.cancel();
-  const varm = new SpeechSynthesisUtterance(" ");
-  varm.lang = "nb-NO";
-  varm.volume = 0.01;
-  varm.rate = 2;
-  const stemme = finnStemme();
-  if (stemme) varm.voice = stemme;
-  speechSynthesis.speak(varm);
   taleKlar = true;
 }
 
-export function si(tekst: string, lydPa: boolean): void {
-  if (!lydPa || !harTale() || !tekst.trim()) return;
-  if (!taleKlar) aktiverLyd();
+function siMedNettleser(tekst: string): void {
+  if (!harTale()) return;
   speechSynthesis.cancel();
   const ytring = new SpeechSynthesisUtterance(forberedUttale(tekst));
   ytring.lang = "nb-NO";
@@ -129,7 +151,19 @@ export function si(tekst: string, lydPa: boolean): void {
   speechSynthesis.speak(ytring);
 }
 
+export function si(tekst: string, lydPa: boolean): void {
+  if (!lydPa || !tekst.trim()) return;
+  if (!taleKlar) aktiverLyd();
+  stoppTale();
+  if (skalBrukeAlfStemme(valgtStemmeNavn)) {
+    void spillAlfStemme(forberedUttale(tekst)).catch(() => siMedNettleser(tekst));
+    return;
+  }
+  siMedNettleser(tekst);
+}
+
 export function stoppTale(): void {
+  stoppAlfStemme();
   if (harTale()) speechSynthesis.cancel();
 }
 

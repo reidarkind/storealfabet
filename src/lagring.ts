@@ -1,3 +1,4 @@
+import { migrerStemme } from "./tale/tale";
 import type { Innstillinger, Melk, Sekk } from "./typer";
 
 const NOKKEL = "storealfabet-v1";
@@ -9,7 +10,7 @@ export interface Lagret {
 }
 
 const STANDARD: Lagret = {
-  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" },
+  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "alf" },
   besteVerdi: 0,
   finesteMelk: "vanlig",
 };
@@ -34,10 +35,13 @@ export function lesLagring(): Lagret {
     const nivaa = erNivaa(data.innstillinger?.nivaa) ? data.innstillinger.nivaa : "forste";
     const lydPa = data.innstillinger?.lydPa !== false;
     const sekk = erSekk(data.innstillinger?.sekk) ? data.innstillinger.sekk : "lilla";
-    const stemme = typeof data.innstillinger?.stemme === "string" ? data.innstillinger.stemme : "";
+    const raaStemme = typeof data.innstillinger?.stemme === "string" ? data.innstillinger.stemme : "";
+    const stemme = migrerStemme(raaStemme);
     const besteVerdi = typeof data.besteVerdi === "number" && data.besteVerdi >= 0 ? data.besteVerdi : 0;
     const finesteMelk = erMelk(data.finesteMelk) ? data.finesteMelk : "vanlig";
-    return { innstillinger: { nivaa, lydPa, sekk, stemme }, besteVerdi, finesteMelk };
+    const lagret = { innstillinger: { nivaa, lydPa, sekk, stemme }, besteVerdi, finesteMelk };
+    if (stemme !== raaStemme) skrivLagring(lagret);
+    return lagret;
   } catch {
     return { ...STANDARD, innstillinger: { ...STANDARD.innstillinger } };
   }

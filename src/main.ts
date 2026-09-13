@@ -19,7 +19,8 @@ import {
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
-import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stemmeEtikett, stoppTale } from "./tale/tale";
+import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
+import { ALF_STEMME, aktiverLyd, kanSnakke, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
@@ -98,9 +99,10 @@ function bindMeny(): void {
   });
   $("stemme-valg").addEventListener("change", () => {
     const valg = $("stemme-valg") as HTMLSelectElement;
-    innstillinger = { ...innstillinger, stemme: valg.value };
+    innstillinger = { ...innstillinger, stemme: valg.value || ALF_STEMME };
     settStemme(innstillinger.stemme);
     persist();
+    if (innstillinger.stemme === ALF_STEMME) void lastAlfStemme();
   });
   $("prov-stemme").addEventListener("click", () => {
     aktiverLyd();
@@ -129,18 +131,18 @@ function fyllStemmer(): void {
   const valg = $("stemme-valg") as HTMLSelectElement;
   const stemmer = norskeStemmer();
   valg.innerHTML = "";
-  const auto = document.createElement("option");
-  auto.value = "";
-  auto.textContent = stemmer[0] ? `Automatisk (${stemmer[0].name})` : "Automatisk";
-  valg.append(auto);
+  const alf = document.createElement("option");
+  alf.value = ALF_STEMME;
+  alf.textContent = "Alfs stemme (anbefalt)";
+  valg.append(alf);
   for (const stemme of stemmer) {
     const opt = document.createElement("option");
     opt.value = stemme.name;
-    opt.textContent = stemmeEtikett(stemme.name);
+    opt.textContent = stemme.name;
     valg.append(opt);
   }
-  valg.value = innstillinger.stemme;
-  if (valg.value !== innstillinger.stemme) valg.value = "";
+  valg.value = innstillinger.stemme || ALF_STEMME;
+  if (valg.value !== innstillinger.stemme) valg.value = ALF_STEMME;
 }
 
 function markerNivaa(): void {
@@ -187,7 +189,7 @@ function visOppgave(oppgave: Oppgave, overskrift: string): void {
   $("hint-linje").textContent = "";
   $("bilde-felt").hidden = !oppgave.bilde;
   if (oppgave.bilde) $("bilde-felt").textContent = bildeEmoji(oppgave.bilde);
-  $("hoer").textContent = harTale() ? "Hør igjen" : "Vis lyden";
+  $("hoer").textContent = kanSnakke() ? "Hør igjen" : "Vis lyden";
   const valg = $("valg");
   valg.innerHTML = "";
   const tegn = $("tegne-wrap") as HTMLElement;
@@ -477,7 +479,7 @@ function bindTegning(): void {
   $("tegn-sjekk").addEventListener("click", () => void sjekkTegning());
   $("hoer").addEventListener("click", () => {
     if (!aktivOppgave) return;
-    if (harTale() && innstillinger.lydPa) si(aktivOppgave.tale, true);
+    if (kanSnakke() && innstillinger.lydPa) si(aktivOppgave.tale, true);
     else $("hint-linje").textContent = aktivOppgave.tale;
   });
   $("hjem-fra-spill").addEventListener("click", () => {
@@ -915,8 +917,24 @@ bindSti();
 oppdaterMeny();
 vis("skjerm-meny");
 visInstallasjon();
+function visStemmeStatus(status: AlfStemmeStatus): void {
+  const tekst =
+    status.tilstand === "laster"
+      ? `Alf gjør klar stemmen…${status.prosent != null ? ` ${status.prosent} %` : ""}`
+      : status.tilstand === "feil"
+        ? "Alf bruker telefonens stemme i stedet."
+        : "";
+  for (const id of ["stemme-status", "meny-stemme-status"]) {
+    const el = $(id);
+    el.textContent = tekst;
+    el.hidden = !tekst;
+  }
+}
+
 settStemme(innstillinger.stemme);
-if (harTale()) {
+onAlfStemmeStatus(visStemmeStatus);
+if (innstillinger.stemme === ALF_STEMME) void lastAlfStemme();
+if (typeof speechSynthesis !== "undefined") {
   speechSynthesis.getVoices();
   speechSynthesis.addEventListener("voiceschanged", () => {
     speechSynthesis.getVoices();
