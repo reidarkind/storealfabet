@@ -10,7 +10,7 @@ export interface Lagret {
 }
 
 const STANDARD: Lagret = {
-  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "alf" },
+  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "auto" },
   besteVerdi: 0,
   finesteMelk: "vanlig",
 };

@@ -24,17 +24,17 @@ function medMinne(innhold: Record<string, string>, kjor: () => void): void {
 }
 
 describe("lagring", () => {
-  it("bytter Nora ut med Alfs stemme", () => {
+  it("bytter tvungen Alf og Compact Nora til telefonens stemme", () => {
     medMinne(
       {
         "storealfabet-v1": JSON.stringify({
-          innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "Microsoft Nora Compact" },
+          innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "alf" },
           besteVerdi: 0,
           finesteMelk: "vanlig",
         }),
       },
       () => {
-        expect(lesLagring().innstillinger.stemme).toBe("alf");
+        expect(lesLagring().innstillinger.stemme).toBe("auto");
       },
     );
   });

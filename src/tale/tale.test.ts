@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { erNorskLang, forberedUttale, migrerStemme, skalBrukeAlfStemme, stemmeRang, velgBesteStemme } from "./tale";
+import {
+  erNorskLang,
+  forberedUttale,
+  migrerStemme,
+  skalBrukeAlfStemme,
+  stiLydForHendelse,
+  stemmeRang,
+  velgBesteStemme,
+  velgTaleModus,
+} from "./tale";
 
 describe("stemmevalg", () => {
   it("kjenner igjen norsk språk", () => {
@@ -30,14 +39,28 @@ describe("stemmevalg", () => {
     expect(stemmeRang("Henrik", "nb-NO")).toBeGreaterThan(stemmeRang("Nora", "nn-NO"));
   });
 
-  it("bruker Alfs stemme i stedet for Nora", () => {
+  it("bruker telefonens stemme når Siri finnes, ellers Alf mot dårlig Nora", () => {
     expect(skalBrukeAlfStemme("alf")).toBe(true);
-    expect(skalBrukeAlfStemme("")).toBe(true);
-    expect(migrerStemme("")).toBe("alf");
-    expect(migrerStemme("Microsoft Nora")).toBe("alf");
-    expect(migrerStemme("Microsoft Nora Compact")).toBe("alf");
-    expect(migrerStemme("Microsoft Hedda")).toBe("alf");
+    expect(skalBrukeAlfStemme("")).toBe(false);
+    expect(skalBrukeAlfStemme("auto")).toBe(false);
+    expect(migrerStemme("")).toBe("auto");
+    expect(migrerStemme("alf")).toBe("auto");
+    expect(migrerStemme("Microsoft Nora Compact")).toBe("auto");
     expect(migrerStemme("Google norsk")).toBe("Google norsk");
+    expect(velgTaleModus("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }])).toBe(
+      "system",
+    );
+    expect(velgTaleModus("auto", [{ name: "Microsoft Nora Compact", lang: "nb-NO" }])).toBe("alf");
+    expect(velgTaleModus("alf", [{ name: "Nora (Enhanced)", lang: "nb-NO" }])).toBe("alf");
+  });
+
+  it("gir korte veilyder i stedet for prat", () => {
+    expect(stiLydForHendelse("plukk", "diamant")).toBe("diamant");
+    expect(stiLydForHendelse("plukk", "krystall")).toBe("krystall");
+    expect(stiLydForHendelse("trafikk", "syklist")).toBe("sykkel");
+    expect(stiLydForHendelse("trafikk", "bil")).toBe("bil");
+    expect(stiLydForHendelse("baesj", "baesj")).toBe("baesj");
+    expect(stiLydForHendelse("treff", "zombie")).toBe("zombie");
   });
 
   it("retter trykk på vanlige norske spillord", () => {

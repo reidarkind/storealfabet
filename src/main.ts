@@ -21,7 +21,19 @@ import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, vei
 import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { SvarVakt } from "./spill/svar-vakt";
 import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
-import { ALF_STEMME, aktiverLyd, kanSnakke, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
+import {
+  ALF_STEMME,
+  AUTO_STEMME,
+  aktiverLyd,
+  kanSnakke,
+  norskeStemmer,
+  settStemme,
+  si,
+  spillKling,
+  spillStiLyd,
+  stiLydForHendelse,
+  stoppTale,
+} from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
@@ -103,7 +115,7 @@ function bindMeny(): void {
   $("stemme-valg").addEventListener("click", (e) => {
     const knapp = (e.target as HTMLElement).closest("[data-stemme]");
     if (!(knapp instanceof HTMLButtonElement)) return;
-    innstillinger = { ...innstillinger, stemme: knapp.dataset.stemme || ALF_STEMME };
+    innstillinger = { ...innstillinger, stemme: knapp.dataset.stemme || AUTO_STEMME };
     settStemme(innstillinger.stemme);
     persist();
     markerStemme();
@@ -135,10 +147,11 @@ function markerSekk(): void {
 function fyllStemmer(): void {
   const felt = $("stemme-valg");
   felt.innerHTML = "";
-  const knapper: { id: string; tekst: string }[] = [{ id: ALF_STEMME, tekst: "Alfs stemme (anbefalt)" }];
+  const knapper: { id: string; tekst: string }[] = [{ id: AUTO_STEMME, tekst: "Telefonens stemme" }];
   for (const stemme of norskeStemmer()) {
     knapper.push({ id: stemme.name, tekst: stemme.name });
   }
+  knapper.push({ id: ALF_STEMME, tekst: "Alfs stemme (i appen)" });
   for (const rad of knapper) {
     const knapp = document.createElement("button");
     knapp.type = "button";
@@ -150,7 +163,7 @@ function fyllStemmer(): void {
 }
 
 function markerStemme(): void {
-  const valgt = innstillinger.stemme || ALF_STEMME;
+  const valgt = innstillinger.stemme || AUTO_STEMME;
   document.querySelectorAll<HTMLButtonElement>("#stemme-valg [data-stemme]").forEach((knapp) => {
     const erValgt = knapp.dataset.stemme === valgt;
     knapp.classList.toggle("valgt", erValgt);
@@ -771,7 +784,6 @@ function visAlfTruffet(): void {
   alf.classList.add("truffet");
   panel.classList.add("humper");
   $("sti-hjelp").textContent = "Uff da! En klønete zombie dultet til Alf. Noen steiner ramler.";
-  if (innstillinger.lydPa) si("Uff da! En zombie dultet til Alf.", true);
   window.setTimeout(() => {
     alf.classList.remove("truffet");
     panel.classList.remove("humper");
@@ -783,7 +795,6 @@ function visAlfSkitten(tekst?: string): void {
   const linje = tekst ?? "Ikke ta på hundebæsj!";
   $("sti-alf").classList.add("skitten");
   $("sti-hjelp").textContent = linje;
-  if (innstillinger.lydPa) si(linje, true);
 }
 
 function visAlfTrafikk(hendelse: StiHendelse): void {
@@ -792,7 +803,6 @@ function visAlfTrafikk(hendelse: StiHendelse): void {
   alf.classList.add("truffet");
   $("sti-spill").classList.add("humper");
   $("sti-hjelp").textContent = tekst;
-  if (innstillinger.lydPa) si(tekst, true);
   window.setTimeout(() => {
     alf.classList.remove("truffet");
     $("sti-spill").classList.remove("humper");
@@ -861,22 +871,19 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
       tilstand = resultat.tilstand;
       aktivSti = tilstand;
       for (const hendelse of resultat.hendelser) {
+        spillStiLyd(innstillinger.lydPa, stiLydForHendelse(hendelse.type, hendelse.objekt));
         if (hendelse.type === "plukk") {
-          spillKling(innstillinger.lydPa, hendelse.objekt === "diamant" ? 880 : 640);
           if (tur && (hendelse.objekt === "krystall" || hendelse.objekt === "diamant")) {
             tur = { ...tur, lomme: giBelonning(tur.lomme, hendelse.objekt) };
           }
           visAlfGlad();
           oppdaterHud();
         } else if (hendelse.type === "baesj") {
-          spillKling(innstillinger.lydPa, 140);
           visAlfSkitten(hendelse.tekst);
           if (tur) tur = { ...tur, skitten: true };
         } else if (hendelse.type === "trafikk") {
-          spillKling(innstillinger.lydPa, 210);
           visAlfTrafikk(hendelse);
         } else {
-          spillKling(innstillinger.lydPa, 180);
           visAlfTruffet();
         }
       }
