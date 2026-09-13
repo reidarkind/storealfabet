@@ -72,6 +72,14 @@ describe("perspektiv", () => {
     expect(prosjektPunkt(0.5, 0.01, 20).synlig).toBe(false);
   });
 
+  it("lar veiting synes i det fjerne selv om en bakke er foran", () => {
+    const tid = Array.from({ length: 90 }, (_, i) => 40 - i * 0.4).find((t) => bakomBakke(0.1, t));
+    expect(tid).toBeDefined();
+    const stein = prosjektPunkt(0.5, 0.1, tid ?? 20, false);
+    expect(stein.synlig).toBe(true);
+    expect(stein.skala).toBeLessThan(0.2);
+  });
+
   it("lar fjerne ting starte nesten usynlige og vokse når de kommer nærmere", () => {
     const langt = prosjektPunkt(0.5, 0.1, 40);
     const naer = prosjektPunkt(0.5, 0.9, 40);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distFraZ, zFraDist } from "./perspektiv";
+import { distFraZ, veiEndeZ, zFraDist } from "./perspektiv";
 import {
   flyttX,
   settX,
@@ -184,6 +184,17 @@ describe("sti", () => {
     expect(tilstand.krystaller).toBe(0);
     expect(tilstand.objekter).toHaveLength(1);
     expect(hendelser).toEqual([]);
+  });
+
+  it("lar startting og nye steiner ligge langt framme, ikke inntil Alf", () => {
+    const start = startSti();
+    for (const objekt of start.objekter) {
+      expect(zFraDist(objekt.dist, start.tid)).toBeLessThan(0.45);
+    }
+    const { tilstand } = stiTick({ ...startSti(), spawnTeller: 0.55, objekter: [] }, 0.01, () => 0.99);
+    const ny = tilstand.objekter[0];
+    expect(ny).toBeDefined();
+    expect(zFraDist(ny?.dist ?? 0, tilstand.tid)).toBeLessThan(veiEndeZ() + 0.12);
   });
 
   it("legger steiner på tilfeldig sted i veien, ikke bare tre felt", () => {

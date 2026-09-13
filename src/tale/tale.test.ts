@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   erNorskLang,
   forberedUttale,
+  lesOppgave,
   migrerStemme,
   skalBrukeAlfStemme,
   stiLydForHendelse,
@@ -73,5 +74,12 @@ describe("stemmevalg", () => {
     expect(forberedUttale("Alf rekker skolen")).toMatch(/sko/i);
     expect(forberedUttale("En zombie dultet til Alf")).toMatch(/såmbi|zombi/i);
     expect(forberedUttale("krystall og diamant")).toMatch(/krysstall|krys-tall/i);
+  });
+
+  it("leser hele spørsmålet og sier lang lyd bare én gang", () => {
+    expect(forberedUttale("Trekk sammen: lll – eee – rrr")).toBe("Trekk sammen: l – e – r");
+    expect(forberedUttale("Hvilken bokstav sier aaa?")).toBe("Hvilken bokstav sier a?");
+    expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).toMatch(/trekk sammen/i);
+    expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).not.toMatch(/lll|eee|rrr/i);
   });
 });

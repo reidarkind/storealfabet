@@ -123,13 +123,13 @@ export function startSti(): StiTilstand {
     nesteId: 18,
     spawnTeller: 0.35,
     objekter: [
-      veiTing(1, 0.22, 0.2, "krystall"),
+      veiTing(1, 0.22, 0.16, "krystall"),
       veiTing(2, 0.81, 0.34, "zombie"),
       veiTing(3, 0.47, 0.1, "diamant"),
-      veiTing(14, 0.33, 0.56, "baesj"),
-      veiTing(15, 0.64, 0.7, "krystall"),
-      veiTing(16, 0.18, 0.42, "syklist", { retning: "mot", baneX: 0.18, vingleFase: 0.4 }),
-      veiTing(17, 0.78, 0.62, "bil", { retning: "fra", baneX: 0.78 }),
+      veiTing(14, 0.33, 0.24, "baesj"),
+      veiTing(15, 0.64, 0.2, "krystall"),
+      veiTing(16, 0.18, 0.3, "syklist", { retning: "mot", baneX: 0.18, vingleFase: 0.4 }),
+      veiTing(17, 0.78, 0.14, "bil", { retning: "mot", baneX: 0.78 }),
     ],
     dekor: [
       veiDekor(4, -1, 0.06, "hus"),
@@ -231,7 +231,7 @@ function nyTrafikk(id: number, type: TrafikkType, tid: number, tilfeldig: () => 
   return {
     id,
     x,
-    dist: distFraZ(retning === "fra" ? 0.58 : veiEndeZ() + 0.02, tid),
+    dist: distFraZ(retning === "fra" ? 0.28 : veiEndeZ() + 0.02, tid),
     type,
     retning,
     baneX: x,

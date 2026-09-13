@@ -138,7 +138,12 @@ const UTTALE: [RegExp, string][] = [
 ];
 
 export function forberedUttale(tekst: string): string {
-  return UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), tekst);
+  const enLyd = tekst.replace(/([a-zæøå])\1{2,}/gi, "$1");
+  return UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), enLyd);
+}
+
+export function lesOppgave(oppgave: { prompt: string; tale: string }): string {
+  return forberedUttale(oppgave.prompt || oppgave.tale);
 }
 
 export function stemmeEtikett(navn: string): string {

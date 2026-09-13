@@ -27,6 +27,7 @@ import {
   AUTO_STEMME,
   aktiverLyd,
   kanSnakke,
+  lesOppgave,
   norskeStemmer,
   settStemme,
   si,
@@ -210,9 +211,9 @@ async function nesteOppgave(): Promise<void> {
   tegneForsok = 0;
   visOppgave(aktivOppgave, iDuell ? `Duell ${tur.duellRunde} av 3` : `Stopp ${tur.stopp} av 6`);
   startTimer();
-  const tale = aktivOppgave.tale;
+  const tale = lesOppgave(aktivOppgave);
   window.setTimeout(() => {
-    if (innstillinger.lydPa && aktivOppgave?.tale === tale) si(tale, true);
+    if (innstillinger.lydPa && aktivOppgave && lesOppgave(aktivOppgave) === tale) si(tale, true);
   }, 80);
 }
 
@@ -562,8 +563,8 @@ function bindTegning(): void {
   $("tegn-sjekk").addEventListener("click", () => void sjekkTegning());
   $("hoer").addEventListener("click", () => {
     if (!aktivOppgave) return;
-    if (kanSnakke() && innstillinger.lydPa) si(aktivOppgave.tale, true);
-    else $("hint-linje").textContent = aktivOppgave.tale;
+    if (kanSnakke() && innstillinger.lydPa) si(lesOppgave(aktivOppgave), true);
+    else $("hint-linje").textContent = lesOppgave(aktivOppgave);
   });
   $("hjem-fra-spill").addEventListener("click", () => {
     startLopenr += 1;
@@ -779,7 +780,7 @@ function tegnSti(tilstand: StiTilstand): void {
     );
   }
   for (const objekt of tilstand.objekter) {
-    const p = prosjektDist(objekt.x, objekt.dist, tilstand.tid);
+    const p = prosjektDist(objekt.x, objekt.dist, tilstand.tid, false);
     const fil =
       objekt.type === "syklist" || objekt.type === "bil"
         ? trafikkBilde(objekt.type, objekt.retning ?? "mot")

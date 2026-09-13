@@ -74,7 +74,7 @@ export function bakomBakke(z: number, tid: number): boolean {
   return false;
 }
 
-export function prosjektDist(x: number, dist: number, tid: number): Prosjekt {
+export function prosjektDist(x: number, dist: number, tid: number, skjulBakBakke = true): Prosjekt {
   const z = zFraDist(dist, tid);
   const vei = veiPunktDist(dist, tid);
   const t = perspektivT(z);
@@ -82,12 +82,12 @@ export function prosjektDist(x: number, dist: number, tid: number): Prosjekt {
     left: vei.cx + (x - 0.5) * 2 * vei.halv,
     top: vei.cy,
     skala: 0.02 + t * 1.35,
-    synlig: z > veiEndeZ() && z < 1.18 && t > 0.008 && !bakomBakke(z, tid),
+    synlig: z > veiEndeZ() && z < 1.18 && t > 0.008 && !(skjulBakBakke && bakomBakke(z, tid)),
   };
 }
 
-export function prosjektPunkt(x: number, z: number, tid: number): Prosjekt {
-  return prosjektDist(x, distFraZ(z, tid), tid);
+export function prosjektPunkt(x: number, z: number, tid: number, skjulBakBakke = true): Prosjekt {
+  return prosjektDist(x, distFraZ(z, tid), tid, skjulBakBakke);
 }
 
 export function prosjektDekor(side: -1 | 1, dist: number, tid: number): Prosjekt {
