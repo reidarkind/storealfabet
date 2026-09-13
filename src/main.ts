@@ -674,7 +674,7 @@ async function visMelkebod(): Promise<void> {
 }
 
 function melkTekst(melk: Melk, v: number, k: number, d: number, skitten: boolean): string {
-  const grunn = `Alf kom frem med ${k} krystaller og ${d} diamanter (${v} poeng). Han kjøpte ${MELK_NAVN[melk].toLowerCase()}!`;
+  const grunn = `Alf kom fram med ${k} krystaller og ${d} diamanter (${v} poeng). Han kjøpte ${MELK_NAVN[melk].toLowerCase()}!`;
   return skitten ? `${grunn} Men han må gå hjem og vaske seg. Ikke plukk hundebæsj.` : grunn;
 }
 

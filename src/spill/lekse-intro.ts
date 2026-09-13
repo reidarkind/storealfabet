@@ -13,7 +13,7 @@ export interface LekseIntro {
 }
 
 export const LEKSE_VARIANT = [
-  "Oi, Alf har glemt å gjøre alle leksene! La oss hjelpe han før vi går videre.",
+  "Oi, Alf har glemt å gjøre alle leksene! La oss hjelpe ham før vi går videre.",
   "Uff da! Alf glemte leksene i går. Kan du hjelpe ham?",
   "Stopp litt. Alf har ikke gjort leksene. Vi hjelper ham først.",
 ];

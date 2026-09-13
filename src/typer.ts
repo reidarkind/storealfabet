@@ -44,7 +44,7 @@ export interface Innstillinger {
 
 export const MELK_NAVN: Record<Melk, string> = {
   vanlig: "Vanlig skolemelk",
-  jordbaer: "Jordbærmelke",
+  jordbaer: "Jordbærmelk",
   sjokolade: "Sjokolademelk",
   stjerne: "Stjernemelk",
 };
