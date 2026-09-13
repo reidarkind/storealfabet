@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bakomBakke, prosjektDist, prosjektPunkt, veiAvstand, veiPunkt, veiPunktDist, veiSvingVed, zFraDist } from "./perspektiv";
+import { bakomBakke, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, veiPunktDist, veiSvingVed, zFraDist } from "./perspektiv";
 
 describe("perspektiv", () => {
   it("legger stein på veien ved forsvinningspunktet, ikke i himmelen", () => {
@@ -42,5 +42,15 @@ describe("perspektiv", () => {
     const senere = prosjektDist(0.2, dist, 36);
     const vei2 = veiPunktDist(dist, 36);
     expect(senere.left).toBeCloseTo(vei2.cx + (0.2 - 0.5) * 2 * vei2.halv, 5);
+  });
+
+  it("setter skolen på veien i det fjerne", () => {
+    const start = skolePunkt(40);
+    const slutt = skolePunkt(0);
+    expect(start.synlig).toBe(true);
+    expect(start.top).toBeGreaterThan(10);
+    expect(start.top).toBeLessThan(50);
+    expect(slutt.skala).toBeGreaterThan(start.skala);
+    expect(slutt.skala).toBeLessThan(1.1);
   });
 });

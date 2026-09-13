@@ -16,8 +16,8 @@ import {
   startDuell,
   startTur,
 } from "./spill/tur";
-import { prosjektDekor, prosjektDist, prosjektPunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
-import { flyttX, settX, startSti, stiFremgang, stiTick, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
+import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
+import { flyttX, settX, startSti, stiTick, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -622,14 +622,12 @@ function tegnSti(tilstand: StiTilstand): void {
   foran.src = bildeUrl("alf.svg");
   const skole = $("sti-skole") as HTMLImageElement;
   const wrap = $("sti-skole-wrap");
-  const fram = stiFremgang(tilstand.tid);
-  const hor = veiPunkt(0.03, tilstand.tid);
-  const skoleP = prosjektPunkt(0.5, 0.05 + fram * 0.12, tilstand.tid);
+  const skoleP = skolePunkt(tilstand.tid);
   skole.src = bildeUrl("skole.svg");
-  wrap.hidden = !skoleP.synlig;
-  wrap.style.left = `${hor.cx}%`;
-  wrap.style.top = `${hor.cy}%`;
-  wrap.style.transform = `translate(-50%, -100%) scale(${0.28 + fram * 1.7})`;
+  wrap.hidden = false;
+  wrap.style.left = `${skoleP.left}%`;
+  wrap.style.top = `${skoleP.top}%`;
+  wrap.style.transform = `translate(-50%, -88%) scale(${skoleP.skala})`;
   const lag = $("sti-lag");
   const levende = new Set<string>();
   for (const objekt of tilstand.dekor) {
@@ -717,6 +715,7 @@ async function spillSti(): Promise<boolean> {
   panel.hidden = false;
   $("oppgave-kort").hidden = true;
   $("sti-alf").classList.remove("skitten", "truffet", "glad");
+  $("sti-alf").classList.add("gaar");
   $("sti-spill").classList.remove("humper");
   $("sti-treff").hidden = true;
   $("sti-lag").innerHTML = "";
@@ -764,6 +763,7 @@ async function spillSti(): Promise<boolean> {
   if (tur) oppdaterHud();
   const duell = tilstand.zombieTreff > 0;
   if (duell) await vent(900);
+  $("sti-alf").classList.remove("gaar");
   aktivSti = null;
   panel.hidden = true;
   $("skjerm-spill").classList.remove("paa-sti");

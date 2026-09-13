@@ -280,15 +280,16 @@ button {
 
 #sti-skole-wrap {
   position: absolute;
-  top: 20%;
+  top: 22%;
   left: 50%;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -88%);
   transform-origin: center bottom;
   pointer-events: none;
+  filter: drop-shadow(0 4px 0 #2a184055);
 }
 
 #sti-skole-wrap[hidden] {
@@ -296,18 +297,18 @@ button {
 }
 
 #sti-skole {
-  width: 6.2rem;
-  height: 5.4rem;
+  width: 3.4rem;
+  height: 3rem;
   object-fit: contain;
 }
 
 #sti-skole-skilt {
-  margin-top: -0.15rem;
-  padding: 0.08rem 0.45rem;
+  margin-top: -0.2rem;
+  padding: 0.04rem 0.35rem;
   border-radius: 999px;
   background: #3d2a6e;
   color: var(--krem);
-  font-size: 0.72rem;
+  font-size: 0.58rem;
   font-weight: 900;
 }
 
@@ -566,6 +567,75 @@ button {
   left: 38%;
   width: 24%;
   height: 16%;
+}
+
+#sti-alf.gaar:not(.glad):not(.truffet) {
+  animation: sti-gaa 0.52s ease-in-out infinite;
+}
+
+#sti-alf.gaar:not(.glad) .alf-pose.bak {
+  transform-origin: 50% 80%;
+  animation: sti-gaa-kropp 0.52s ease-in-out infinite;
+}
+
+#sti-alf.gaar:not(.glad) #sti-sekk {
+  animation: sti-gaa-sekk 0.52s ease-in-out infinite;
+}
+
+.alf-pote {
+  position: absolute;
+  bottom: 1%;
+  width: 20%;
+  height: 11%;
+  border-radius: 50%;
+  background: #c9843a;
+  box-shadow: 0 2px 0 #8a5a28;
+}
+
+.alf-pote.venstre {
+  left: 20%;
+}
+
+.alf-pote.hoyre {
+  right: 20%;
+}
+
+#sti-alf.gaar:not(.glad) .alf-pote.venstre {
+  animation: sti-pote 0.52s ease-in-out infinite;
+}
+
+#sti-alf.gaar:not(.glad) .alf-pote.hoyre {
+  animation: sti-pote 0.52s ease-in-out infinite 0.26s;
+}
+
+#sti-alf.glad .alf-pote {
+  display: none;
+}
+
+@keyframes sti-gaa {
+  0%,
+  100% { transform: translate(-50%, -88%) rotate(-3deg); }
+  25% { transform: translate(-50%, -94%) rotate(2deg); }
+  50% { transform: translate(-50%, -88%) rotate(3deg); }
+  75% { transform: translate(-50%, -94%) rotate(-2deg); }
+}
+
+@keyframes sti-gaa-kropp {
+  0%,
+  100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+@keyframes sti-gaa-sekk {
+  0%,
+  100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(3px) rotate(4deg); }
+}
+
+@keyframes sti-pote {
+  0%,
+  100% { transform: translateY(2px) scaleY(0.85); }
+  50% { transform: translateY(-8px) scaleY(1); }
 }
 
 #sti-alf.glad {
