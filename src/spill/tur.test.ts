@@ -70,6 +70,7 @@ describe("tur", () => {
     expect(avsluttTur({ ...tur, lomme: { krystaller: 4, diamanter: 0 } }).melk).toBe("jordbaer");
     expect(avsluttTur({ ...tur, lomme: { krystaller: 0, diamanter: 4 } }).melk).toBe("sjokolade");
     expect(avsluttTur({ ...tur, lomme: { krystaller: 4, diamanter: 4 } }).melk).toBe("stjerne");
+    expect(avsluttTur({ ...tur, skitten: true }).skitten).toBe(true);
   });
 
   it("harZombie følger planen", () => {

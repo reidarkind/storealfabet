@@ -16,12 +16,14 @@ export interface Tur {
   duellRiktige: number;
   duellRunde: number;
   ferdig: boolean;
+  skitten: boolean;
 }
 
 export interface TurSlutt {
   lomme: Lomme;
   verdi: number;
   melk: Melk;
+  skitten: boolean;
 }
 
 export function velgZombieStopp(tilfeldig = Math.random): number[] {
@@ -49,6 +51,7 @@ export function startTur(innstillinger: Innstillinger, tilfeldig = Math.random):
     duellRiktige: 0,
     duellRunde: 0,
     ferdig: false,
+    skitten: false,
   };
 }
 
@@ -103,5 +106,6 @@ export function avsluttTur(tur: Tur): TurSlutt {
     lomme: tur.lomme,
     verdi: v,
     melk: melkForVerdi(v),
+    skitten: tur.skitten,
   };
 }

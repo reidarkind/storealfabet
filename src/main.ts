@@ -16,7 +16,7 @@ import {
   startDuell,
   startTur,
 } from "./spill/tur";
-import { baneFraX, flyttBane, startSti, stiSkala, stiTick, stiVenstre, velgBane, type Bane, type StiTilstand } from "./spill/sti";
+import { baneFraX, flyttBane, startSti, stiDekorVenstre, stiFremgang, stiSkala, stiTick, stiVenstre, velgBane, type Bane, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -318,7 +318,7 @@ async function visMelkebod(): Promise<void> {
   $("oppgave-kort").hidden = true;
   $("melkebod").hidden = false;
   $("melk-tittel").textContent = MELK_NAVN[slutt.melk];
-  $("melk-tekst").textContent = melkTekst(slutt.melk, slutt.verdi, slutt.lomme.krystaller, slutt.lomme.diamanter);
+  $("melk-tekst").textContent = melkTekst(slutt.melk, slutt.verdi, slutt.lomme.krystaller, slutt.lomme.diamanter, slutt.skitten);
   $("melk-ikon").textContent = melkIkon(slutt.melk);
   const lagret = oppdaterRekord(lesLagring(), slutt.verdi, slutt.melk);
   skrivLagring({ ...lagret, innstillinger });
@@ -326,8 +326,9 @@ async function visMelkebod(): Promise<void> {
   if (innstillinger.lydPa) si(`Alf fikk ${MELK_NAVN[slutt.melk]}`, true);
 }
 
-function melkTekst(melk: Melk, v: number, k: number, d: number): string {
-  return `Alf kom frem med ${k} krystaller og ${d} diamanter (${v} poeng). Han kjøpte ${MELK_NAVN[melk].toLowerCase()}!`;
+function melkTekst(melk: Melk, v: number, k: number, d: number, skitten: boolean): string {
+  const grunn = `Alf kom frem med ${k} krystaller og ${d} diamanter (${v} poeng). Han kjøpte ${MELK_NAVN[melk].toLowerCase()}!`;
+  return skitten ? `${grunn} Men han må gå hjem og vaske seg. Ikke plukk hundebæsj.` : grunn;
 }
 
 function melkIkon(melk: Melk): string {
@@ -458,6 +459,7 @@ function visLekseStopp(stopp: number): void {
   alf.style.left = `${10 + (stopp - 1) * 12}%`;
   alf.style.backgroundImage = `url(${import.meta.env.BASE_URL}alf.svg)`;
   zombie.style.backgroundImage = `url(${import.meta.env.BASE_URL}zombie.svg)`;
+  $("lekse-skole").style.backgroundImage = `url(${import.meta.env.BASE_URL}skole.svg)`;
 }
 
 function visLekseZombie(vises: boolean): void {
@@ -470,6 +472,38 @@ function feirLekse(): void {
   window.setTimeout(() => alf.classList.remove("feirer"), 700);
 }
 
+function bildeUrl(fil: string): string {
+  return `${import.meta.env.BASE_URL}${fil}`;
+}
+
+function oppdaterStiTing(
+  lag: HTMLElement,
+  id: string,
+  klasser: string,
+  src: string,
+  alt: string,
+  left: string,
+  top: string,
+  skala: number,
+  z: number,
+  levende: Set<string>,
+): void {
+  levende.add(id);
+  let el = document.getElementById(id) as HTMLImageElement | null;
+  if (!el) {
+    el = document.createElement("img");
+    el.id = id;
+    el.alt = alt;
+    el.src = src;
+    lag.append(el);
+  }
+  el.className = klasser;
+  el.style.left = left;
+  el.style.top = top;
+  el.style.transform = `translateX(-50%) scale(${skala})`;
+  el.style.zIndex = String(z);
+}
+
 function tegnSti(tilstand: StiTilstand): void {
   $("sti-ur").textContent = String(Math.ceil(tilstand.tid));
   const alf = $("sti-alf");
@@ -478,21 +512,46 @@ function tegnSti(tilstand: StiTilstand): void {
   $("sti-sekk").className = `sekk-${innstillinger.sekk}`;
   const bak = document.querySelector("#sti-alf .alf-pose.bak") as HTMLImageElement;
   const foran = document.querySelector("#sti-alf .alf-pose.foran") as HTMLImageElement;
-  bak.src = `${import.meta.env.BASE_URL}alf-bak.svg`;
-  foran.src = `${import.meta.env.BASE_URL}alf.svg`;
+  bak.src = bildeUrl("alf-bak.svg");
+  foran.src = bildeUrl("alf.svg");
+  const skole = $("sti-skole") as HTMLImageElement;
+  const wrap = $("sti-skole-wrap");
+  const fram = stiFremgang(tilstand.tid);
+  skole.src = bildeUrl("skole.svg");
+  wrap.style.top = `${26 + fram * 8}%`;
+  wrap.style.transform = `translate(-50%, -92%) scale(${0.85 + fram * 1.55})`;
   const lag = $("sti-lag");
-  lag.innerHTML = "";
+  const levende = new Set<string>();
+  for (const objekt of tilstand.dekor) {
+    oppdaterStiTing(
+      lag,
+      `sti-dekor-${objekt.id}`,
+      `sti-ting ${objekt.type}`,
+      bildeUrl(`${objekt.type}.svg`),
+      objekt.type,
+      stiDekorVenstre(objekt.side, objekt.y),
+      `${20 + objekt.y * 64}%`,
+      stiSkala(objekt.y),
+      4 + Math.round(objekt.y * 40),
+      levende,
+    );
+  }
   for (const objekt of tilstand.objekter) {
-    const el = document.createElement("img");
-    el.className = `sti-ting ${objekt.type}`;
-    const skala = stiSkala(objekt.y);
-    el.style.left = stiVenstre(objekt.bane, objekt.y);
-    el.style.top = `${10 + objekt.y * 72}%`;
-    el.style.transform = `translateX(-50%) scale(${skala})`;
-    el.style.zIndex = String(10 + Math.round(objekt.y * 80));
-    el.src = `${import.meta.env.BASE_URL}${objekt.type}.svg`;
-    el.alt = objekt.type === "krystall" ? "krystall" : objekt.type === "diamant" ? "diamant" : "zombie";
-    lag.append(el);
+    oppdaterStiTing(
+      lag,
+      `sti-ting-${objekt.id}`,
+      `sti-ting ${objekt.type}`,
+      bildeUrl(`${objekt.type}.svg`),
+      objekt.type === "baesj" ? "hundebæsj" : objekt.type,
+      stiVenstre(objekt.bane, objekt.y),
+      `${24 + objekt.y * 62}%`,
+      stiSkala(objekt.y),
+      12 + Math.round(objekt.y * 80),
+      levende,
+    );
+  }
+  for (const barn of [...lag.children]) {
+    if (!levende.has(barn.id)) barn.remove();
   }
 }
 
@@ -502,11 +561,38 @@ function visAlfGlad(): void {
   window.setTimeout(() => alf.classList.remove("glad"), 700);
 }
 
+function visAlfTruffet(): void {
+  const alf = $("sti-alf");
+  const panel = $("sti-spill");
+  const treff = $("sti-treff");
+  const zombie = $("sti-treff-zombie") as HTMLImageElement;
+  zombie.src = bildeUrl("zombie.svg");
+  treff.hidden = false;
+  alf.classList.add("truffet");
+  panel.classList.add("humper");
+  $("sti-hjelp").textContent = "Uff da! En klønete zombie dultet til Alf. Noen steiner ramler.";
+  if (innstillinger.lydPa) si("Uff da! En zombie dultet til Alf.", true);
+  window.setTimeout(() => {
+    alf.classList.remove("truffet");
+    panel.classList.remove("humper");
+    treff.hidden = true;
+  }, 1200);
+}
+
+function visAlfSkitten(): void {
+  $("sti-alf").classList.add("skitten");
+  $("sti-hjelp").textContent = "Æsj! Ikke plukk hundebæsj. Alf stinker.";
+}
+
 async function spillSti(): Promise<void> {
   const panel = $("sti-spill");
   $("skjerm-spill").classList.add("paa-sti");
   panel.hidden = false;
   $("oppgave-kort").hidden = true;
+  $("sti-alf").classList.remove("skitten", "truffet", "glad");
+  $("sti-spill").classList.remove("humper");
+  $("sti-treff").hidden = true;
+  $("sti-lag").innerHTML = "";
   aktivSti = startSti();
   let tilstand = aktivSti;
   tegnSti(tilstand);
@@ -523,8 +609,14 @@ async function spillSti(): Promise<void> {
         if (hendelse.type === "plukk") {
           spillKling(innstillinger.lydPa, hendelse.objekt === "diamant" ? 880 : 640);
           visAlfGlad();
+        } else if (hendelse.type === "baesj") {
+          spillKling(innstillinger.lydPa, 140);
+          visAlfSkitten();
+          if (tur) tur = { ...tur, skitten: true };
+        } else {
+          spillKling(innstillinger.lydPa, 180);
+          visAlfTruffet();
         }
-        else spillKling(innstillinger.lydPa, 180);
       }
       tegnSti(tilstand);
       if (tilstand.ferdig) {
