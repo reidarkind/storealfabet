@@ -144,6 +144,10 @@ export async function spillAlfStemme(tekst: string): Promise<void> {
   stoppKilde();
   const ok = await lastAlfStemme();
   if (!ok || nr !== spillNr || !okt) throw new Error("alf-stemme");
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+  if (nr !== spillNr) return;
   const wav = await okt.predict(tekst);
   if (nr !== spillNr) return;
   await spillWav(wav);

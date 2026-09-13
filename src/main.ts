@@ -19,6 +19,7 @@ import {
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
+import { SvarVakt } from "./spill/svar-vakt";
 import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
 import { ALF_STEMME, aktiverLyd, kanSnakke, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
@@ -39,6 +40,7 @@ let aktivSti: StiTilstand | null = null;
 let duellFraSti = false;
 let stiPauset = false;
 let startLopenr = 0;
+const svarVakt = new SvarVakt();
 
 function vis(id: string): void {
   document.querySelectorAll<HTMLElement>(".skjerm").forEach((el) => {
@@ -177,10 +179,14 @@ async function nesteOppgave(): Promise<void> {
   tegneForsok = 0;
   visOppgave(aktivOppgave, iDuell ? `Duell ${tur.duellRunde} av 3` : `Stopp ${tur.stopp} av 6`);
   startTimer();
-  if (innstillinger.lydPa) si(aktivOppgave.tale, true);
+  const tale = aktivOppgave.tale;
+  window.setTimeout(() => {
+    if (innstillinger.lydPa && aktivOppgave?.tale === tale) si(tale, true);
+  }, 80);
 }
 
 function visOppgave(oppgave: Oppgave, overskrift: string): void {
+  svarVakt.slipp();
   $("oppgave-kort").hidden = false;
   $("melkebod").hidden = true;
   $("skjerm-spill").classList.toggle("tegn-modus", oppgave.type === "tegning");
@@ -213,7 +219,12 @@ function visOppgave(oppgave: Oppgave, overskrift: string): void {
       b.type = "button";
       b.className = "valg-knapp";
       b.textContent = tekst;
-      b.addEventListener("click", () => void svar(tekst));
+      const trykk = (e: Event) => {
+        e.preventDefault();
+        void svar(tekst);
+      };
+      b.addEventListener("pointerdown", trykk);
+      b.addEventListener("click", trykk);
       valg.append(b);
     }
   }
@@ -285,6 +296,10 @@ function tegnUr(): void {
 
 async function svar(tekst: string, tidsutlop = false): Promise<void> {
   if (!tur || !aktivOppgave) return;
+  if (!svarVakt.godta()) return;
+  document.querySelectorAll<HTMLButtonElement>(".valg-knapp").forEach((knapp) => {
+    knapp.disabled = true;
+  });
   stoppTimer();
   const { riktig, hint } = tidsutlop
     ? { riktig: false, hint: aktivOppgave.hint }
@@ -515,6 +530,7 @@ async function sjekkTegning(): Promise<void> {
     $("hint-linje").textContent = "Prøv en gang til. Følg det lyse spøkelset.";
     return;
   }
+  if (!svarVakt.godta()) return;
   stoppTimer();
   await etterSvar(ok, aktivOppgave.hint);
 }

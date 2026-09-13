@@ -160,6 +160,7 @@ button {
   border-radius: 1.1rem;
   padding: 0.95rem 1.1rem;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .hoved {
@@ -948,6 +949,11 @@ button {
   font-size: 1.35rem;
   min-height: 3.4rem;
   box-shadow: 0 5px 0 #c9ae78;
+  touch-action: manipulation;
+}
+
+.valg-knapp:disabled {
+  opacity: 1;
 }
 
 .valg-knapp:active {
