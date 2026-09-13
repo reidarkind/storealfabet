@@ -18,7 +18,7 @@ import {
   startTur,
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
-import { flyttX, settX, startSti, stiTick, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
+import { flyttX, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -692,11 +692,15 @@ function tegnSti(tilstand: StiTilstand): void {
   }
   for (const objekt of tilstand.objekter) {
     const p = prosjektDist(objekt.x, objekt.dist, tilstand.tid);
+    const fil =
+      objekt.type === "syklist" || objekt.type === "bil"
+        ? trafikkBilde(objekt.type, objekt.retning ?? "mot")
+        : objekt.type;
     oppdaterStiTing(
       lag,
       `sti-ting-${objekt.id}`,
       `sti-ting ${objekt.type}`,
-      bildeUrl(`${objekt.type}.svg`),
+      bildeUrl(`${fil}.svg`),
       objekt.type === "baesj" ? "hundebæsj" : objekt.type === "bil" ? "bil" : objekt.type,
       p.left,
       p.top,

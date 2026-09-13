@@ -6,6 +6,7 @@ export const PLUKK_AVSTAND = 0.18;
 export type StiType = "krystall" | "diamant" | "zombie" | "baesj" | "syklist" | "bil";
 export type DekorType = "hus" | "hund" | "barn" | "tre";
 export type TrafikkType = "syklist" | "bil";
+export type TrafikkRetning = "mot" | "fra";
 export type DekorSide = -1 | 1;
 
 export interface StiObjekt {
@@ -13,6 +14,9 @@ export interface StiObjekt {
   x: number;
   dist: number;
   type: StiType;
+  retning?: TrafikkRetning;
+  baneX?: number;
+  vingleFase?: number;
 }
 
 export interface StiDekor {
@@ -75,6 +79,14 @@ export function baesjHint(tilfeldig = Math.random): string {
   return BAESJ_HINT[Math.floor(tilfeldig() * BAESJ_HINT.length)] ?? "Ikke ta på hundebæsj!";
 }
 
+export function trafikkBilde(type: TrafikkType, retning: TrafikkRetning = "mot"): string {
+  return retning === "fra" ? `${type}-bak` : type;
+}
+
+export function vingleX(baneX: number, tid: number, fase: number): number {
+  return klemX(baneX + Math.sin(tid * 4.4 + fase) * 0.075);
+}
+
 function klem(verdi: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, verdi));
 }
@@ -83,8 +95,8 @@ export function klemX(x: number): number {
   return klem(x, 0.04, 0.96);
 }
 
-function veiTing(id: number, x: number, z: number, type: StiType): StiObjekt {
-  return { id, x, dist: distFraZ(z, STI_SEKUNDER), type };
+function veiTing(id: number, x: number, z: number, type: StiType, ekstra: Partial<StiObjekt> = {}): StiObjekt {
+  return { id, x, dist: distFraZ(z, STI_SEKUNDER), type, ...ekstra };
 }
 
 function veiDekor(id: number, side: DekorSide, z: number, type: DekorType): StiDekor {
@@ -103,8 +115,8 @@ export function startSti(): StiTilstand {
       veiTing(3, 0.47, 0.1, "diamant"),
       veiTing(14, 0.33, 0.56, "baesj"),
       veiTing(15, 0.64, 0.7, "krystall"),
-      veiTing(16, 0.18, 0.42, "syklist"),
-      veiTing(17, 0.78, 0.28, "bil"),
+      veiTing(16, 0.18, 0.42, "syklist", { retning: "mot", baneX: 0.18, vingleFase: 0.4 }),
+      veiTing(17, 0.78, 0.62, "bil", { retning: "fra", baneX: 0.78 }),
     ],
     dekor: [
       veiDekor(4, -1, 0.06, "hus"),
@@ -182,6 +194,33 @@ function trafikkFart(type: StiType): number {
   return 0;
 }
 
+function flyttTrafikk(raw: StiObjekt, dt: number, tid: number): StiObjekt {
+  const fart = trafikkFart(raw.type);
+  if (!fart) return raw;
+  const tegn = raw.retning === "fra" ? 1 : -1;
+  const baneX = raw.baneX ?? raw.x;
+  return {
+    ...raw,
+    dist: raw.dist + tegn * dt * fart,
+    baneX,
+    x: raw.type === "syklist" ? vingleX(baneX, tid, raw.vingleFase ?? 0) : raw.x,
+  };
+}
+
+function nyTrafikk(id: number, type: TrafikkType, tid: number, tilfeldig: () => number): StiObjekt {
+  const retning: TrafikkRetning = tilfeldig() < 0.42 ? "fra" : "mot";
+  const x = tilfeldigVeiX(tilfeldig);
+  return {
+    id,
+    x,
+    dist: distFraZ(retning === "fra" ? 0.58 : 0.03, tid),
+    type,
+    retning,
+    baneX: x,
+    vingleFase: tilfeldig() * Math.PI * 2,
+  };
+}
+
 function treffer(alfX: number, objektX: number): boolean {
   return Math.abs(alfX - objektX) <= PLUKK_AVSTAND;
 }
@@ -206,8 +245,7 @@ export function stiTick(
   const beholdt: StiObjekt[] = [];
 
   for (const raw of tilstand.objekter) {
-    const fart = trafikkFart(raw.type);
-    const objekt = fart ? { ...raw, dist: raw.dist - dt * fart } : raw;
+    const objekt = flyttTrafikk(raw, dt, tid);
     const z = zFraDist(objekt.dist, tid);
     if (z < 0.86) {
       beholdt.push(objekt);
@@ -245,12 +283,12 @@ export function stiTick(
 
   if (spawnTeller >= 0.55) {
     spawnTeller = 0;
-    beholdt.push({
-      id: nesteId,
-      x: tilfeldigVeiX(tilfeldig),
-      dist: distFraZ(0.03, tid),
-      type: tilfeldigType(tilfeldig),
-    });
+    const type = tilfeldigType(tilfeldig);
+    beholdt.push(
+      type === "syklist" || type === "bil"
+        ? nyTrafikk(nesteId, type, tid, tilfeldig)
+        : { id: nesteId, x: tilfeldigVeiX(tilfeldig), dist: distFraZ(0.03, tid), type },
+    );
     nesteId += 1;
     dekor.push({
       id: nesteId,

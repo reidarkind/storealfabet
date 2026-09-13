@@ -10,6 +10,7 @@ import {
   stiTick,
   stiVenstre,
   baesjHint,
+  trafikkBilde,
   trafikkHint,
   xFraSkjerm,
 } from "./sti";
@@ -184,10 +185,50 @@ describe("sti", () => {
     const dist = distFraZ(0.4, STI_SEKUNDER);
     const t = {
       ...startSti(),
-      objekter: [{ id: 1, x: 0.4, dist, type: "syklist" as const }],
+      objekter: [{ id: 1, x: 0.4, dist, type: "syklist" as const, retning: "mot" as const }],
     };
     const { tilstand } = stiTick(t, 0.2, () => 0.99);
     expect(tilstand.objekter[0]?.dist).toBeLessThan(dist);
+  });
+
+  it("lar biler kjøre fra Alf mot horisonten", () => {
+    const dist = distFraZ(0.6, STI_SEKUNDER);
+    const t = {
+      ...startSti(),
+      objekter: [{ id: 1, x: 0.6, dist, type: "bil" as const, retning: "fra" as const }],
+    };
+    const { tilstand } = stiTick(t, 0.2, () => 0.99);
+    expect(tilstand.objekter[0]?.dist).toBeGreaterThan(dist);
+  });
+
+  it("vingler sykkelen fram og tilbake i veien", () => {
+    const dist = distFraZ(0.3, STI_SEKUNDER);
+    const start = {
+      ...startSti(),
+      objekter: [
+        {
+          id: 1,
+          x: 0.5,
+          dist,
+          type: "syklist" as const,
+          retning: "mot" as const,
+          baneX: 0.5,
+          vingleFase: 0,
+        },
+      ],
+    };
+    const a = stiTick(start, 0.15, () => 0.99).tilstand;
+    const b = stiTick(a, 0.15, () => 0.99).tilstand;
+    expect(a.objekter[0]?.x).not.toBeCloseTo(b.objekter[0]?.x ?? -1, 3);
+    expect(a.objekter[0]?.x).toBeGreaterThan(0.35);
+    expect(a.objekter[0]?.x).toBeLessThan(0.65);
+  });
+
+  it("viser trafikk forfra eller bakfra", () => {
+    expect(trafikkBilde("bil", "mot")).toBe("bil");
+    expect(trafikkBilde("bil", "fra")).toBe("bil-bak");
+    expect(trafikkBilde("syklist", "mot")).toBe("syklist");
+    expect(trafikkBilde("syklist", "fra")).toBe("syklist-bak");
   });
 
   it("gir ulike trafikkhint", () => {
