@@ -116,12 +116,38 @@ describe("sti", () => {
     expect(tekster.size).toBeGreaterThanOrEqual(4);
   });
 
-  it("har hus, folk og zombie langs veien fra start", () => {
+  it("har hus, folk og høyst én zombie langs veien fra start", () => {
     const start = startSti();
     expect(start.dekor.length).toBeGreaterThanOrEqual(8);
     expect(start.dekor.some((d) => d.type === "hus")).toBe(true);
-    expect(start.objekter.some((o) => o.type === "zombie")).toBe(true);
+    expect(start.objekter.filter((o) => o.type === "zombie")).toHaveLength(1);
     expect(start.objekter.some((o) => o.type === "baesj")).toBe(true);
+    const zombie = start.objekter.find((o) => o.type === "zombie");
+    expect(zombie && (zombie.x <= 0.24 || zombie.x >= 0.76)).toBe(true);
+  });
+
+  it("spawner ikke flere zombier på samme vei", () => {
+    let tilstand = { ...startSti(), spawnTeller: 0.55 };
+    const startZombier = tilstand.objekter.filter((o) => o.type === "zombie").length;
+    for (let i = 0; i < 10; i++) {
+      tilstand = stiTick(tilstand, 0.56, () => 0).tilstand;
+    }
+    const zombier = tilstand.objekter.filter((o) => o.type === "zombie").length;
+    expect(startZombier).toBeLessThanOrEqual(1);
+    expect(zombier).toBeLessThanOrEqual(1);
+  });
+
+  it("fjerner zombier når Alf går videre etter duell", () => {
+    const t = settX(
+      {
+        ...startSti(),
+        objekter: [nær(0.8, "zombie"), { id: 2, x: 0.2, dist: distFraZ(0.4, STI_SEKUNDER), type: "zombie" as const }],
+      },
+      0.82,
+    );
+    const truffet = stiTick(t, 0.01, () => 0.99).tilstand;
+    const videre = fortsettEtterZombie(truffet);
+    expect(videre.objekter.every((o) => o.type !== "zombie")).toBe(true);
   });
 
   it("fyller grøfta med mer dekor", () => {

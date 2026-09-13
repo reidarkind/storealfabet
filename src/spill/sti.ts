@@ -2,6 +2,8 @@ import { distFraZ, prosjektPunkt, veiEndeZ, veiPunkt, zFraDist } from "./perspek
 
 export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
+export const ZOMBIE_AVSTAND = 0.13;
+export const MAX_ZOMBIE_PER_STI = 1;
 
 export type StiType = "krystall" | "diamant" | "zombie" | "baesj" | "syklist" | "bil";
 export type DekorType = "hus" | "hund" | "barn" | "tre";
@@ -38,6 +40,7 @@ export interface StiTilstand {
   zombieTreff: number;
   baesj: number;
   ferdig: boolean;
+  zombieSpawnet: number;
 }
 
 export interface StiHendelse {
@@ -108,6 +111,8 @@ export function fortsettEtterZombie(tilstand: StiTilstand): StiTilstand {
     ...tilstand,
     ferdig: false,
     zombieTreff: 0,
+    objekter: tilstand.objekter.filter((o) => o.type !== "zombie"),
+    zombieSpawnet: Math.max(tilstand.zombieSpawnet, MAX_ZOMBIE_PER_STI),
   };
 }
 
@@ -143,6 +148,7 @@ export function startSti(): StiTilstand {
     zombieTreff: 0,
     baesj: 0,
     ferdig: false,
+    zombieSpawnet: 1,
   };
 }
 
@@ -178,13 +184,17 @@ function tilfeldigVeiX(tilfeldig: () => number): number {
   return 0.08 + tilfeldig() * 0.84;
 }
 
-function tilfeldigType(tilfeldig: () => number): StiType {
+function tilfeldigZombieX(tilfeldig: () => number): number {
+  return tilfeldig() < 0.5 ? 0.12 + tilfeldig() * 0.1 : 0.78 + tilfeldig() * 0.1;
+}
+
+function tilfeldigType(tilfeldig: () => number, kanZombie: boolean): StiType {
   const r = tilfeldig();
-  if (r < 0.12) return "zombie";
-  if (r < 0.2) return "baesj";
-  if (r < 0.32) return "syklist";
-  if (r < 0.44) return "bil";
-  if (r < 0.56) return "diamant";
+  if (kanZombie && r < 0.04) return "zombie";
+  if (r < 0.12) return "baesj";
+  if (r < 0.24) return "syklist";
+  if (r < 0.36) return "bil";
+  if (r < 0.5) return "diamant";
   return "krystall";
 }
 
@@ -229,8 +239,9 @@ function nyTrafikk(id: number, type: TrafikkType, tid: number, tilfeldig: () => 
   };
 }
 
-function treffer(alfX: number, objektX: number): boolean {
-  return Math.abs(alfX - objektX) <= PLUKK_AVSTAND;
+function treffer(alfX: number, objekt: StiObjekt): boolean {
+  const avstand = objekt.type === "zombie" ? ZOMBIE_AVSTAND : PLUKK_AVSTAND;
+  return Math.abs(alfX - objekt.x) <= avstand;
 }
 
 export function stiTick(
@@ -250,6 +261,7 @@ export function stiTick(
   let diamanter = tilstand.diamanter;
   let zombieTreff = tilstand.zombieTreff;
   let baesj = tilstand.baesj;
+  let zombieSpawnet = tilstand.zombieSpawnet;
   const beholdt: StiObjekt[] = [];
 
   for (const raw of tilstand.objekter) {
@@ -262,7 +274,7 @@ export function stiTick(
     if (z > 1.12) {
       continue;
     }
-    if (!treffer(tilstand.x, objekt.x)) {
+    if (!treffer(tilstand.x, objekt)) {
       beholdt.push(objekt);
       continue;
     }
@@ -291,11 +303,17 @@ export function stiTick(
 
   if (spawnTeller >= 0.55) {
     spawnTeller = 0;
-    const type = tilfeldigType(tilfeldig);
+    const type = tilfeldigType(tilfeldig, zombieSpawnet < MAX_ZOMBIE_PER_STI);
+    if (type === "zombie") zombieSpawnet += 1;
     beholdt.push(
       type === "syklist" || type === "bil"
         ? nyTrafikk(nesteId, type, tid, tilfeldig)
-        : { id: nesteId, x: tilfeldigVeiX(tilfeldig), dist: distFraZ(veiEndeZ() + 0.02, tid), type },
+        : {
+            id: nesteId,
+            x: type === "zombie" ? tilfeldigZombieX(tilfeldig) : tilfeldigVeiX(tilfeldig),
+            dist: distFraZ(veiEndeZ() + 0.02, tid),
+            type,
+          },
     );
     nesteId += 1;
     dekor.push({
@@ -326,6 +344,7 @@ export function stiTick(
       diamanter,
       zombieTreff,
       baesj,
+      zombieSpawnet,
       ferdig: tid <= 0 || zombieTreff > 0,
     },
     hendelser,
