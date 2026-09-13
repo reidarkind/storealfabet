@@ -68,7 +68,9 @@ function bindMeny(): void {
     oppdaterMeny();
     vis("skjerm-rekord");
   });
+  $("knapp-installer").addEventListener("click", () => vis("skjerm-installer"));
   $("knapp-om").addEventListener("click", () => vis("skjerm-om"));
+  $("install-hint").addEventListener("click", () => vis("skjerm-installer"));
   document.querySelectorAll<HTMLButtonElement>("[data-tilbake]").forEach((knapp) => {
     knapp.addEventListener("click", () => {
       vis("skjerm-meny");
@@ -587,9 +589,10 @@ function vent(ms: number): Promise<void> {
 }
 
 function visInstallasjon(): void {
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const standalone = window.matchMedia("(display-mode: standalone)").matches || ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
-  $("ios-hint").hidden = !ios || standalone;
+  const standalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
+  $("install-hint").hidden = standalone;
 }
 
 registerSW({ immediate: true });

@@ -27,8 +27,9 @@
         <button type="button" id="knapp-spill" class="hoved">Kom igjen, Alf!</button>
         <button type="button" id="knapp-innstillinger" class="sekundaer">Innstillinger</button>
         <button type="button" id="knapp-rekord" class="sekundaer">Rekord</button>
+        <button type="button" id="knapp-installer" class="sekundaer">Installer</button>
         <button type="button" id="knapp-om" class="sekundaer">Om appen</button>
-        <p id="ios-hint" class="ios-hint" hidden>På iPhone: Del → Legg til på Hjem-skjerm</p>
+        <button type="button" id="install-hint" class="install-hint" data-install-hint>Vil du ha appen på hjemskjermen? Se Installer.</button>
       </section>
 
       <section id="skjerm-innstillinger" class="skjerm" hidden>
@@ -65,8 +66,45 @@
         <h1>Om appen</h1>
         <p>Alf er en hund som har forsovet seg. Han må rekke skolen for å kjøpe skolemelk. Langs veien øver dere på bokstaver, lyder, rim og små ord — slik 1. og 2. klasse gjør på skolen.</p>
         <p>Zombiene er tullete bokstavtyver. De er litt spennende, aldri skumle. Hvis du taper en duell, mister Alf noen steiner, men han kommer alltid frem.</p>
+        <h2>Personvern</h2>
         <p>Nivå og beste tur lagres under Rekord, bare på denne telefonen. Ingenting sendes vekk.</p>
-        <p>Legg siden til hjemskjermen, så føles den som en app. På Android spør nettleseren. På iPhone: Del → Legg til på Hjem-skjerm.</p>
+        <nav class="more-links" aria-label="Mer">
+          <a class="sekundaer" data-apps href="https://reidarkind.github.io/myapps/" target="_blank" rel="noopener noreferrer">Andre apper jeg har laget</a>
+          <a class="sekundaer" data-coffee href="https://buymeacoffee.com/reidarkind" target="_blank" rel="noopener noreferrer"><span class="btn-ico" aria-hidden="true">☕</span>Spander en kaffe</a>
+        </nav>
+        <button type="button" data-tilbake class="tekst">Tilbake</button>
+      </section>
+
+      <section id="skjerm-installer" class="skjerm" hidden>
+        <h1>StoreAlfabet</h1>
+        <h2>Hva dette er</h2>
+        <p>StoreAlfabet er et bokstavspill for 1. og 2. klasse. Du hjelper hunden Alf til skolen, samler krystaller og diamanter, og øver på bokstaver langs veien.</p>
+        <h2>Personvern</h2>
+        <p>Appen lagrer ingenting i skyen. Poeng og innstillinger ligger bare lokalt på telefonen. StoreAlfabet synkroniserer ikke mellom enheter.</p>
+        <p>Bytt telefon, eller slett nettsteddata: rekordene blir borte. Ingenting sendes på nett.</p>
+        <h2>Legg til på hjem-skjermen</h2>
+        <p>StoreAlfabet er en nettside du installerer som app. Den ligger ikke i App Store eller Google Play. Åpne den over HTTPS.</p>
+        <h3>iPhone</h3>
+        <ol>
+          <li>Åpne StoreAlfabet i Safari (ikke Chrome, ikke en lenke inne i en annen app).</li>
+          <li>Trykk Del (firkanten med pil opp) nederst på skjermen.</li>
+          <li>Bla i Del-arket og trykk Legg til på Hjem-skjerm. Ser du den ikke: sveip nederste rad, eller trykk Rediger handlinger.</li>
+          <li>Trykk Legg til. Åpne StoreAlfabet fra det nye ikonet.</li>
+        </ol>
+        <p>Spill fra hjem-skjerm-ikonet, så appen fyller hele skjermen.</p>
+        <h3>Android</h3>
+        <ol>
+          <li>Åpne StoreAlfabet i Chrome (eller Samsung Internet).</li>
+          <li>Trykk menyen (tre prikker) oppe til høyre, deretter Installer app eller Legg til på startskjerm. Noen telefoner viser også et installasjonsbanner nederst.</li>
+          <li>Åpne StoreAlfabet fra startskjermen.</li>
+        </ol>
+        <p>Etter installasjon åpner du appen fra ikonet, ikke fra en vanlig fane.</p>
+        <h2>Opphav</h2>
+        <p>Ideen er Reidar Kind sin. Utviklet ved hjelp av AI.</p>
+        <nav class="more-links" aria-label="Mer">
+          <a class="sekundaer" data-apps href="https://reidarkind.github.io/myapps/" target="_blank" rel="noopener noreferrer">Andre apper jeg har laget</a>
+          <a class="sekundaer" data-coffee href="https://buymeacoffee.com/reidarkind" target="_blank" rel="noopener noreferrer"><span class="btn-ico" aria-hidden="true">☕</span>Spander en kaffe</a>
+        </nav>
         <button type="button" data-tilbake class="tekst">Tilbake</button>
       </section>
 
