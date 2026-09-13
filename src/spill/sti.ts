@@ -46,6 +46,12 @@ export function velgBane(tilstand: StiTilstand, bane: Bane): StiTilstand {
   return { ...tilstand, bane };
 }
 
+export function baneFraX(rel: number): Bane {
+  if (rel < 1 / 3) return 0;
+  if (rel < 2 / 3) return 1;
+  return 2;
+}
+
 export function flyttBane(tilstand: StiTilstand, steg: -1 | 1): StiTilstand {
   const bane = Math.max(0, Math.min(2, tilstand.bane + steg)) as Bane;
   return { ...tilstand, bane };

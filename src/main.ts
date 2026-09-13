@@ -16,7 +16,7 @@ import {
   startDuell,
   startTur,
 } from "./spill/tur";
-import { flyttBane, startSti, stiSkala, stiTick, stiVenstre, velgBane, type Bane, type StiTilstand } from "./spill/sti";
+import { baneFraX, flyttBane, startSti, stiSkala, stiTick, stiVenstre, velgBane, type Bane, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -550,27 +550,39 @@ function settStiBane(bane: Bane): void {
 }
 
 function bindSti(): void {
-  document.querySelectorAll<HTMLButtonElement>("[data-bane]").forEach((knapp) => {
-    knapp.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      const bane = Number(knapp.dataset.bane);
-      if (bane !== 0 && bane !== 1 && bane !== 2) return;
-      settStiBane(bane);
-    });
-  });
   const panel = $("sti-spill");
   let startX = 0;
-  panel.addEventListener("touchstart", (e) => {
-    startX = e.changedTouches[0]?.clientX ?? 0;
-  }, { passive: true });
-  panel.addEventListener("touchend", (e) => {
-    if (!aktivSti) return;
-    const sluttX = e.changedTouches[0]?.clientX ?? startX;
-    const dx = sluttX - startX;
-    if (Math.abs(dx) < 36) return;
-    aktivSti = flyttBane(aktivSti, dx < 0 ? -1 : 1);
-    tegnSti(aktivSti);
-  }, { passive: true });
+  let startY = 0;
+  let peker = -1;
+
+  panel.addEventListener("pointerdown", (e) => {
+    if (!aktivSti || panel.hidden) return;
+    peker = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    panel.setPointerCapture(e.pointerId);
+  });
+
+  const slipp = (e: PointerEvent) => {
+    if (!aktivSti || peker !== e.pointerId) return;
+    peker = -1;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) >= 24 && Math.abs(dx) > Math.abs(dy) * 0.8) {
+      aktivSti = flyttBane(aktivSti, dx < 0 ? -1 : 1);
+      tegnSti(aktivSti);
+      return;
+    }
+    const ramme = panel.getBoundingClientRect();
+    if (ramme.width <= 0) return;
+    settStiBane(baneFraX((e.clientX - ramme.left) / ramme.width));
+  };
+
+  panel.addEventListener("pointerup", slipp);
+  panel.addEventListener("pointercancel", () => {
+    peker = -1;
+  });
+
   window.addEventListener("keydown", (e) => {
     if (!aktivSti) return;
     if (e.key === "ArrowLeft") {

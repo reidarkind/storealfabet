@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { flyttBane, startSti, stiSkala, stiTick, stiVenstre, velgBane } from "./sti";
+import { baneFraX, flyttBane, startSti, stiSkala, stiTick, stiVenstre, velgBane } from "./sti";
 
 describe("sti", () => {
   it("starter i midten og blir ferdig etter tiden", () => {
@@ -36,6 +36,12 @@ describe("sti", () => {
     );
     const { tilstand } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.zombieTreff).toBe(1);
+  });
+
+  it("deler skjermen i venstre, midten og høyre", () => {
+    expect(baneFraX(0.1)).toBe(0);
+    expect(baneFraX(0.5)).toBe(1);
+    expect(baneFraX(0.9)).toBe(2);
   });
 
   it("flytter Alf ett felt og stopper i kanten", () => {
