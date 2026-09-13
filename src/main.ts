@@ -513,7 +513,8 @@ async function spillSti(): Promise<void> {
     const steg = (naa: number) => {
       const dt = Math.min(0.05, (naa - forrige) / 1000);
       forrige = naa;
-      const resultat = stiTick(tilstand, dt);
+      const kjor = aktivSti ?? tilstand;
+      const resultat = stiTick(kjor, dt);
       tilstand = resultat.tilstand;
       aktivSti = tilstand;
       for (const hendelse of resultat.hendelser) {
@@ -549,38 +550,23 @@ function settStiBane(bane: Bane): void {
   tegnSti(aktivSti);
 }
 
+function styrAlf(klientX: number): void {
+  const panel = $("sti-spill");
+  const ramme = panel.getBoundingClientRect();
+  if (ramme.width <= 0) return;
+  settStiBane(baneFraX((klientX - ramme.left) / ramme.width));
+}
+
 function bindSti(): void {
   const panel = $("sti-spill");
-  let startX = 0;
-  let startY = 0;
-  let peker = -1;
-
   panel.addEventListener("pointerdown", (e) => {
     if (!aktivSti || panel.hidden) return;
-    peker = e.pointerId;
-    startX = e.clientX;
-    startY = e.clientY;
-    panel.setPointerCapture(e.pointerId);
+    styrAlf(e.clientX);
   });
-
-  const slipp = (e: PointerEvent) => {
-    if (!aktivSti || peker !== e.pointerId) return;
-    peker = -1;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    if (Math.abs(dx) >= 24 && Math.abs(dx) > Math.abs(dy) * 0.8) {
-      aktivSti = flyttBane(aktivSti, dx < 0 ? -1 : 1);
-      tegnSti(aktivSti);
-      return;
-    }
-    const ramme = panel.getBoundingClientRect();
-    if (ramme.width <= 0) return;
-    settStiBane(baneFraX((e.clientX - ramme.left) / ramme.width));
-  };
-
-  panel.addEventListener("pointerup", slipp);
-  panel.addEventListener("pointercancel", () => {
-    peker = -1;
+  panel.addEventListener("pointermove", (e) => {
+    if (!aktivSti || panel.hidden) return;
+    if (e.pointerType === "mouse" && e.buttons === 0) return;
+    styrAlf(e.clientX);
   });
 
   window.addEventListener("keydown", (e) => {
