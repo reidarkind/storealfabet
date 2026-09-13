@@ -1,6 +1,6 @@
-# Alf til skolen
+# StoreAlfabet
 
-Mobil PWA for 1. og 2. klasse. Alf har forsovet seg og må rekke skolen. Barnet løser bokstavoppgaver, samler krystaller og diamanter, og kan møte klønete bokstav-zombier. Målet er å kjøpe best mulig skolemelk.
+Mobil PWA for 1. og 2. klasse. Hunden heter Alf. Alf har forsovet seg og må rekke skolen. Barnet løser bokstavoppgaver, samler krystaller og diamanter, og kan møte klønete bokstav-zombier. Målet er å kjøpe best mulig skolemelk.
 
 ## Bruk
 
@@ -26,4 +26,4 @@ npm run preview
 
 ## Meny
 
-Spill, Innstillinger (1. klasse, 2. klasse, Utfordrende, Blandet, lyd) og Om appen. Alt på bokmål.
+Spill, Innstillinger (1. klasse, 2. klasse, Utfordrende, Blandet, lyd), Rekord og Om appen. Alt på bokmål. Hjemskjerm-navnet er StoreAlfabet.
