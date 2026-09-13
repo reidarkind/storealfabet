@@ -12,6 +12,7 @@ import {
   startDuell,
   startNedtelling,
   startTur,
+  turKanFortsette,
   velgZombieStopp,
 } from "./tur";
 
@@ -38,6 +39,7 @@ describe("tur", () => {
 
   it("går seks stopp og blir ferdig", () => {
     let tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.1);
+    expect(turKanFortsette(tur)).toBe(true);
     expect(tur.stopp).toBe(1);
     for (let i = 1; i < ANTALL_STOPP; i++) {
       tur = nesteStopp(tur);
@@ -46,6 +48,8 @@ describe("tur", () => {
     expect(tur.ferdig).toBe(false);
     tur = nesteStopp(tur);
     expect(tur.ferdig).toBe(true);
+    expect(turKanFortsette(tur)).toBe(false);
+    expect(turKanFortsette(null)).toBe(false);
   });
 
   it("øker og minker lomme og går aldri negativ", () => {

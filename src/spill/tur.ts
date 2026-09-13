@@ -107,6 +107,10 @@ export function avsluttDuell(tur: Tur): Tur {
   return { ...tur, lomme, duellRunde: 0, duellRiktige: 0 };
 }
 
+export function turKanFortsette(tur: Tur | null): tur is Tur {
+  return tur != null && !tur.ferdig;
+}
+
 export function nesteStopp(tur: Tur): Tur {
   if (tur.stopp >= ANTALL_STOPP) {
     return { ...tur, ferdig: true };

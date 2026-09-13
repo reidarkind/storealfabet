@@ -16,6 +16,7 @@ import {
   startDuell,
   startNedtelling,
   startTur,
+  turKanFortsette,
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiEndeZ, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
@@ -179,6 +180,8 @@ function markerNivaa(): void {
 }
 
 async function startSpill(): Promise<void> {
+  startLopenr += 1;
+  const nr = startLopenr;
   tur = startTur(innstillinger);
   iDuell = false;
   duellFraSti = false;
@@ -193,14 +196,16 @@ async function startSpill(): Promise<void> {
   $("skjerm-spill").classList.add("paa-sti");
   vis("skjerm-spill");
   if (await spillSti(true)) {
+    if (nr !== startLopenr) return;
     await startZombieDuell(true);
     return;
   }
+  if (nr !== startLopenr) return;
   await nesteOppgave();
 }
 
 async function nesteOppgave(): Promise<void> {
-  if (!tur) return;
+  if (!turKanFortsette(tur)) return;
   aktivOppgave = hentOppgave(tur);
   tegneForsok = 0;
   visOppgave(aktivOppgave, iDuell ? `Duell ${tur.duellRunde} av 3` : `Stopp ${tur.stopp} av 6`);
@@ -299,16 +304,29 @@ function startTimer(): void {
   stoppTimer();
   gjenstaende = TID;
   tegnUr();
+  if (!document.hidden) fortsettTimer();
+}
+
+function fortsettTimer(): void {
+  if (timerId || document.hidden || !turKanFortsette(tur) || !aktivOppgave || aktivSti) return;
   timerId = window.setInterval(() => {
+    if (document.hidden) {
+      pauseTimer();
+      return;
+    }
     gjenstaende -= 1;
     tegnUr();
     if (gjenstaende <= 0) void svar("", true);
   }, 1000);
 }
 
-function stoppTimer(): void {
+function pauseTimer(): void {
   window.clearInterval(timerId);
   timerId = 0;
+}
+
+function stoppTimer(): void {
+  pauseTimer();
 }
 
 function tegnUr(): void {
@@ -321,7 +339,7 @@ function tegnUr(): void {
 }
 
 async function svar(tekst: string, tidsutlop = false): Promise<void> {
-  if (!tur || !aktivOppgave) return;
+  if (!turKanFortsette(tur) || !aktivOppgave) return;
   if (!svarVakt.godta()) return;
   document.querySelectorAll<HTMLButtonElement>(".valg-knapp").forEach((knapp) => {
     knapp.disabled = true;
@@ -334,7 +352,8 @@ async function svar(tekst: string, tidsutlop = false): Promise<void> {
 }
 
 async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promise<void> {
-  if (!tur || !aktivOppgave) return;
+  if (!turKanFortsette(tur) || !aktivOppgave) return;
+  const nr = startLopenr;
   if (riktig) {
     spillKling(innstillinger.lydPa, 740);
     $("hint-linje").textContent = prefiks ?? "Ja!";
@@ -347,6 +366,7 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
   if (iDuell) {
     tur = registrerDuellSvar(tur, riktig);
     await vent(1100);
+    if (nr !== startLopenr || !turKanFortsette(tur)) return;
     if (!duellFerdig(tur)) {
       await nesteOppgave();
       return;
@@ -361,6 +381,7 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
       : "Zombien rotet bort noen steiner. Alf løper videre.";
     oppdaterHud();
     await vent(1000);
+    if (nr !== startLopenr || !turKanFortsette(tur)) return;
     if (duellFraSti) {
       duellFraSti = false;
       if (await fortsettSpillSti()) {
@@ -380,6 +401,7 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
   tur = registrerOppgaveSvar(tur, riktig, aktivOppgave.belonning);
   oppdaterHud();
   await vent(1100);
+  if (nr !== startLopenr || !turKanFortsette(tur)) return;
   if (harZombie(tur)) {
     await startZombieDuell();
     return;
@@ -388,7 +410,7 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
 }
 
 async function startZombieDuell(fraSti = false): Promise<void> {
-  if (!tur) return;
+  if (!turKanFortsette(tur)) return;
   iDuell = true;
   duellFraSti = fraSti;
   if (fraSti) {
@@ -405,7 +427,7 @@ async function startZombieDuell(fraSti = false): Promise<void> {
 }
 
 async function videreEtterStopp(): Promise<void> {
-  if (!tur) return;
+  if (!turKanFortsette(tur)) return;
   tur = nesteStopp(tur);
   if (tur.ferdig) {
     await visMelkebod();
@@ -415,10 +437,13 @@ async function videreEtterStopp(): Promise<void> {
   $("skjerm-spill").classList.remove("tegn-modus");
     $("skjerm-spill").classList.remove("paa-sti");
   $("hint-linje").textContent = "Videre mot skolen! Se opp for trafikk og zombier.";
+  const nr = startLopenr;
   if (await spillSti()) {
+    if (nr !== startLopenr || !turKanFortsette(tur)) return;
     await startZombieDuell(true);
     return;
   }
+  if (nr !== startLopenr || !turKanFortsette(tur)) return;
   visLekseStopp(tur.stopp);
   oppdaterHud();
   await nesteOppgave();
@@ -426,10 +451,18 @@ async function videreEtterStopp(): Promise<void> {
 
 async function visMelkebod(): Promise<void> {
   if (!tur) return;
+  startLopenr += 1;
+  stoppTimer();
   stoppTale();
-  const slutt = avsluttTur(tur);
+  aktivOppgave = null;
+  iDuell = false;
+  $("skjerm-spill").classList.remove("tegn-modus", "paa-sti");
   $("oppgave-kort").hidden = true;
+  $("valg").innerHTML = "";
+  $("oppgave-tekst").textContent = "";
+  $("hint-linje").textContent = "";
   $("melkebod").hidden = false;
+  const slutt = avsluttTur(tur);
   $("melk-tittel").textContent = MELK_NAVN[slutt.melk];
   $("melk-tekst").textContent = melkTekst(slutt.melk, slutt.verdi, slutt.lomme.krystaller, slutt.lomme.diamanter, slutt.skitten);
   $("melk-ikon").textContent = melkIkon(slutt.melk);
@@ -865,6 +898,11 @@ async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<bo
   await new Promise<void>((resolve) => {
     let forrige = performance.now();
     const steg = (naa: number) => {
+      if (document.hidden) {
+        forrige = naa;
+        stiRamme = requestAnimationFrame(steg);
+        return;
+      }
       const dt = Math.min(0.05, (naa - forrige) / 1000);
       forrige = naa;
       const kjor = aktivSti ?? tilstand;
@@ -970,6 +1008,13 @@ registerSW({ immediate: true });
 bindMeny();
 bindTegning();
 bindSti();
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    pauseTimer();
+    return;
+  }
+  fortsettTimer();
+});
 oppdaterMeny();
 vis("skjerm-meny");
 visInstallasjon();
