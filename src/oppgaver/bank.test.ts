@@ -23,6 +23,7 @@ describe("oppgavebank", () => {
     const ordOppgaver = ALLE_OPPGAVER.filter(
       (o) =>
         (o.nivaa === "forste" || o.nivaa === "andre") &&
+        (o.type === "trekkSammen" || o.type === "rim" || o.type === "byggOrd") &&
         /^[a-zæøå]+$/i.test(o.fasit) &&
         o.fasit.length > 1 &&
         !/^\d+$/.test(o.fasit),
@@ -43,6 +44,17 @@ describe("oppgavebank", () => {
     const brukt = new Set(["f-lyd-s"]);
     const oppgave = trekkOppgave("forste", brukt, () => 0);
     expect(oppgave.id).not.toBe("f-lyd-s");
+  });
+
+  it("har mange ulike oppgaver så samme tekst ikke går i ett kjør", () => {
+    const ids = ALLE_OPPGAVER.map((o) => o.id);
+    const tekster = ALLE_OPPGAVER.map((o) => o.prompt);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(tekster).size).toBe(tekster.length);
+    expect(ALLE_OPPGAVER.length).toBeGreaterThanOrEqual(400);
+    expect(ALLE_OPPGAVER.filter((o) => o.nivaa === "forste").length).toBeGreaterThanOrEqual(150);
+    expect(ALLE_OPPGAVER.filter((o) => o.nivaa === "andre").length).toBeGreaterThanOrEqual(150);
+    expect(ALLE_OPPGAVER.filter((o) => o.nivaa === "utfordrende").length).toBeGreaterThanOrEqual(80);
   });
 
   it("blandet kan trekke fra alle nivåer", () => {

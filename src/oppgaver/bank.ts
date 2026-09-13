@@ -1,32 +1,7 @@
 import type { Nivaa, Oppgave } from "../typer";
-import { ALLE_OPPGAVER } from "./data";
+import { ALLE_OPPGAVER, LYDRETTE_ORD_LISTE } from "./data";
 
-const LYDRETTE_ORD = new Set([
-  "is",
-  "sol",
-  "lam",
-  "ris",
-  "mus",
-  "hus",
-  "sil",
-  "mil",
-  "bil",
-  "pil",
-  "se",
-  "le",
-  "mat",
-  "hat",
-  "ram",
-  "dam",
-  "sol",
-  "ros",
-  "los",
-  "mas",
-  "tas",
-  "vis",
-  "ris",
-  "skole",
-]);
+const LYDRETTE_ORD = new Set<string>(LYDRETTE_ORD_LISTE);
 
 export function erLydrettOrd(ord: string): boolean {
   return LYDRETTE_ORD.has(ord.toLowerCase());

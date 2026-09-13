@@ -211,7 +211,41 @@ function visOppgave(oppgave: Oppgave, overskrift: string): void {
 }
 
 function bildeEmoji(id: string): string {
-  const kart: Record<string, string> = { sol: "☀️", hus: "🏠", mus: "🐭", lam: "🐑", bil: "🚗" };
+  const kart: Record<string, string> = {
+    sol: "☀️",
+    hus: "🏠",
+    mus: "🐭",
+    lam: "🐑",
+    bil: "🚗",
+    mat: "🍽️",
+    hat: "🎩",
+    is: "🍦",
+    ape: "🐵",
+    lys: "💡",
+    bær: "🫐",
+    ål: "🐍",
+    tak: "🏠",
+    bus: "🚌",
+    pil: "🏹",
+    dam: "💧",
+    mor: "👩",
+    båt: "⛵",
+    nål: "🪡",
+    gå: "🚶",
+    rom: "🚪",
+    pen: "🖊️",
+    lim: "📎",
+    kos: "🤗",
+    løk: "🧅",
+    kol: "⬛",
+    år: "📅",
+    te: "🍵",
+    fe: "🧚",
+    ben: "🦴",
+    kom: "👋",
+    mål: "🎯",
+    rør: "🚰",
+  };
   return kart[id] ?? "✨";
 }
 
