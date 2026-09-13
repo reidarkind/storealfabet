@@ -6,14 +6,14 @@ Publiseres med GitHub Actions til GitHub Pages. Barnet «installerer» ved å le
 
 ## Stack
 
-- Vite + TypeScript + Phaser 3 + Vitest
+- Vite + TypeScript + HTML/CSS + Vitest
 - PWA (`vite-plugin-pwa`), `base` er `/storealfabet/`
-- Meny utenfor Phaser (HTML/CSS). Phaser viser den malte veien, Alf og zombiene.
+- Meny utenfor Phaser (HTML/CSS). Veien, Alf og zombiene er HTML/CSS/SVG. Lyd er Web Speech og Web Audio, ikke Phaser.
 - `npm test`, `npm run dev`, `npm run build`. Ikke pip/venv.
 
 ## Design som ikke skal endres uten at mennesket ber om det
 
-- Språk: bokmål. Meny: Spill, Innstillinger (nivaa, lyd, sekk), Rekord, Om appen.
+- Språk: bokmål. Meny: Spill, Innstillinger (nivaa, lyd, sekk, stemme), Rekord, Om appen.
 - Fire nivåer: 1. klasse, 2. klasse, Utfordrende, Blandet.
 - Zombier er komiske skurker (store øyne, aldri blod).
 - Tap er mildt. Alf kommer alltid frem. Ingen game over.

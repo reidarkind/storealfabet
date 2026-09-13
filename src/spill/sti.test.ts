@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { startSti, stiTick, velgBane } from "./sti";
+import { flyttBane, startSti, stiSkala, stiTick, stiVenstre, velgBane } from "./sti";
 
 describe("sti", () => {
   it("starter i midten og blir ferdig etter tiden", () => {
@@ -36,5 +36,17 @@ describe("sti", () => {
     );
     const { tilstand } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.zombieTreff).toBe(1);
+  });
+
+  it("flytter Alf ett felt og stopper i kanten", () => {
+    const midt = startSti();
+    expect(flyttBane(midt, -1).bane).toBe(0);
+    expect(flyttBane(flyttBane(midt, -1), -1).bane).toBe(0);
+    expect(flyttBane(midt, 1).bane).toBe(2);
+  });
+
+  it("gjør steiner større når de kommer nærmere", () => {
+    expect(stiSkala(0.1)).toBeLessThan(stiSkala(0.9));
+    expect(stiVenstre(0, 0.1)).not.toBe(stiVenstre(0, 0.9));
   });
 });

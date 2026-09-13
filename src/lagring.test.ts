@@ -4,7 +4,7 @@ import { oppdaterRekord } from "./lagring";
 describe("lagring", () => {
   it("beholder den fineste melken", () => {
     const start = {
-      innstillinger: { nivaa: "forste" as const, lydPa: true, sekk: "lilla" as const },
+      innstillinger: { nivaa: "forste" as const, lydPa: true, sekk: "lilla" as const, stemme: "" },
       besteVerdi: 4,
       finesteMelk: "jordbaer" as const,
     };

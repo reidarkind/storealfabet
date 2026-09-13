@@ -29,7 +29,7 @@ describe("tur", () => {
   });
 
   it("går seks stopp og blir ferdig", () => {
-    let tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla" }, () => 0.1);
+    let tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.1);
     expect(tur.stopp).toBe(1);
     for (let i = 1; i < ANTALL_STOPP; i++) {
       tur = nesteStopp(tur);
@@ -41,7 +41,7 @@ describe("tur", () => {
   });
 
   it("øker og minker lomme og går aldri negativ", () => {
-    let tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla" }, () => 0.2);
+    let tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.2);
     tur = registrerOppgaveSvar(tur, true, "krystall");
     tur = registrerOppgaveSvar(tur, true, "diamant");
     expect(tur.lomme).toEqual({ krystaller: 1, diamanter: 1 });
@@ -53,7 +53,7 @@ describe("tur", () => {
   });
 
   it("duell vinnes med to av tre og gir diamant", () => {
-    let tur = startTur({ nivaa: "andre", lydPa: true, sekk: "lilla" }, () => 0.3);
+    let tur = startTur({ nivaa: "andre", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.3);
     tur = startDuell(tur);
     tur = registrerDuellSvar(tur, true);
     tur = registrerDuellSvar(tur, false);
@@ -65,7 +65,7 @@ describe("tur", () => {
   });
 
   it("melk følger verdi", () => {
-    const tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla" }, () => 0.4);
+    const tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.4);
     expect(avsluttTur({ ...tur, lomme: { krystaller: 0, diamanter: 0 } }).melk).toBe("vanlig");
     expect(avsluttTur({ ...tur, lomme: { krystaller: 4, diamanter: 0 } }).melk).toBe("jordbaer");
     expect(avsluttTur({ ...tur, lomme: { krystaller: 0, diamanter: 4 } }).melk).toBe("sjokolade");
@@ -73,7 +73,7 @@ describe("tur", () => {
   });
 
   it("harZombie følger planen", () => {
-    const tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla" }, () => 0.9);
+    const tur = startTur({ nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" }, () => 0.9);
     expect(harZombie({ ...tur, stopp: 1 })).toBe(false);
   });
 });

@@ -9,7 +9,7 @@ export interface Lagret {
 }
 
 const STANDARD: Lagret = {
-  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla" },
+  innstillinger: { nivaa: "forste", lydPa: true, sekk: "lilla", stemme: "" },
   besteVerdi: 0,
   finesteMelk: "vanlig",
 };
@@ -34,9 +34,10 @@ export function lesLagring(): Lagret {
     const nivaa = erNivaa(data.innstillinger?.nivaa) ? data.innstillinger.nivaa : "forste";
     const lydPa = data.innstillinger?.lydPa !== false;
     const sekk = erSekk(data.innstillinger?.sekk) ? data.innstillinger.sekk : "lilla";
+    const stemme = typeof data.innstillinger?.stemme === "string" ? data.innstillinger.stemme : "";
     const besteVerdi = typeof data.besteVerdi === "number" && data.besteVerdi >= 0 ? data.besteVerdi : 0;
     const finesteMelk = erMelk(data.finesteMelk) ? data.finesteMelk : "vanlig";
-    return { innstillinger: { nivaa, lydPa, sekk }, besteVerdi, finesteMelk };
+    return { innstillinger: { nivaa, lydPa, sekk, stemme }, besteVerdi, finesteMelk };
   } catch {
     return { ...STANDARD, innstillinger: { ...STANDARD.innstillinger } };
   }

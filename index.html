@@ -48,6 +48,9 @@
           <button type="button" data-sekk="blomst">Blomst</button>
         </div>
         <button type="button" id="lyd-pa" class="sekundaer" aria-pressed="true">Lyd er på</button>
+        <label for="stemme-valg">Stemme</label>
+        <select id="stemme-valg" aria-label="Velg stemme"></select>
+        <button type="button" id="prov-stemme" class="sekundaer">Prøv stemmen</button>
         <button type="button" data-tilbake class="tekst">Tilbake</button>
       </section>
 
@@ -75,21 +78,28 @@
           <span class="stein">🔮 <b id="hud-krystall">0</b></span>
           <span class="stein poeng"><b id="hud-verdi">0</b></span>
         </header>
-        <div class="verden-wrap">
-          <div id="verden"></div>
-          <div id="sti-spill" hidden>
-            <p id="sti-ur">40</p>
-            <p id="sti-hjelp">Trykk en bane. Samle steiner. Hopp unna zombier!</p>
-            <div id="sti-lag"></div>
-            <div id="sti-alf">
-              <img id="sti-alf-kropp" alt="Alf" />
-              <span id="sti-sekk" class="sekk-lilla"></span>
-            </div>
-            <div id="sti-baner">
-              <button type="button" data-bane="0" aria-label="Venstre"></button>
-              <button type="button" data-bane="1" aria-label="Midten"></button>
-              <button type="button" data-bane="2" aria-label="Høyre"></button>
-            </div>
+        <div class="verden-wrap" id="lekse-vei">
+          <div class="sti-himmel"></div>
+          <div class="sti-vei"><div class="sti-striper"></div></div>
+          <div id="lekse-skole"></div>
+          <div id="lekse-zombie" hidden></div>
+          <div id="lekse-alf" data-sekk="lilla"></div>
+        </div>
+        <div id="sti-spill" hidden>
+          <div class="sti-himmel"></div>
+          <div class="sti-vei"><div class="sti-striper"></div></div>
+          <p id="sti-ur">40</p>
+          <p id="sti-hjelp">Trykk venstre eller høyre. Plukk steiner. Hopp unna zombier.</p>
+          <div id="sti-lag"></div>
+          <div id="sti-alf" data-sekk="lilla">
+            <img class="alf-pose bak" alt="Alf" />
+            <img class="alf-pose foran" alt="" />
+            <span id="sti-sekk" class="sekk-lilla"></span>
+          </div>
+          <div id="sti-baner">
+            <button type="button" data-bane="0" aria-label="Venstre"></button>
+            <button type="button" data-bane="1" aria-label="Midten"></button>
+            <button type="button" data-bane="2" aria-label="Høyre"></button>
           </div>
         </div>
         <p id="hint-linje" class="hint"></p>

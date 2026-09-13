@@ -39,6 +39,7 @@ export interface Innstillinger {
   nivaa: Nivaa;
   lydPa: boolean;
   sekk: Sekk;
+  stemme: string;
 }
 
 export const MELK_NAVN: Record<Melk, string> = {

@@ -46,6 +46,22 @@ export function velgBane(tilstand: StiTilstand, bane: Bane): StiTilstand {
   return { ...tilstand, bane };
 }
 
+export function flyttBane(tilstand: StiTilstand, steg: -1 | 1): StiTilstand {
+  const bane = Math.max(0, Math.min(2, tilstand.bane + steg)) as Bane;
+  return { ...tilstand, bane };
+}
+
+export function stiSkala(y: number): number {
+  const klem = Math.max(0, Math.min(1, y));
+  return 0.22 + klem * 1.2;
+}
+
+export function stiVenstre(bane: Bane, y: number): string {
+  const klem = Math.max(0, Math.min(1, y));
+  const spre = 9 + klem * 27;
+  return `${50 + (bane - 1) * spre}%`;
+}
+
 function tilfeldigBane(tilfeldig: () => number): Bane {
   return Math.floor(tilfeldig() * ANTALL_BANER) as Bane;
 }

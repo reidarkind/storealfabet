@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <path d="M20 44 44 12h32l24 32-40 64Z" fill="#d9f4ff"/>
+  <path d="M20 44 60 108 44 44Z" fill="#7ec8f0"/>
+  <path d="M100 44 60 108 76 44Z" fill="#b9e7ff"/>
+  <path d="M44 12 60 44 20 44Z" fill="#f4fcff"/>
+  <path d="M76 12 100 44 60 44Z" fill="#9ad4f5"/>
+  <path d="M44 12h32L60 44Z" fill="#ffffff"/>
+  <path d="M36 22 44 12h10l-6 16Z" fill="#fff" opacity=".85"/>
+</svg>
