@@ -1,7 +1,7 @@
 import { registerSW } from "virtual:pwa-register";
 import "./style.css";
 import { lesLagring, oppdaterRekord, skrivLagring } from "./lagring";
-import { miltTap, verdi } from "./okonomi";
+import { giBelonning, miltTap, verdi } from "./okonomi";
 import { sjekkSvar } from "./oppgaver/bank";
 import {
   avsluttDuell,
@@ -16,7 +16,7 @@ import {
   startDuell,
   startTur,
 } from "./spill/tur";
-import { baneFraX, flyttBane, startSti, stiDekorVenstre, stiFremgang, stiSkala, stiTick, stiVenstre, velgBane, type Bane, type StiTilstand } from "./spill/sti";
+import { flyttX, settX, startSti, stiDekorVenstre, stiFremgang, stiSkala, stiTick, stiVenstre, xFraSkjerm, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -507,7 +507,7 @@ function oppdaterStiTing(
 function tegnSti(tilstand: StiTilstand): void {
   $("sti-ur").textContent = String(Math.ceil(tilstand.tid));
   const alf = $("sti-alf");
-  alf.style.left = stiVenstre(tilstand.bane, 0.92);
+  alf.style.left = stiVenstre(tilstand.x, 0.92);
   alf.dataset.sekk = innstillinger.sekk;
   $("sti-sekk").className = `sekk-${innstillinger.sekk}`;
   const bak = document.querySelector("#sti-alf .alf-pose.bak") as HTMLImageElement;
@@ -543,7 +543,7 @@ function tegnSti(tilstand: StiTilstand): void {
       `sti-ting ${objekt.type}`,
       bildeUrl(`${objekt.type}.svg`),
       objekt.type === "baesj" ? "hundebæsj" : objekt.type,
-      stiVenstre(objekt.bane, objekt.y),
+      stiVenstre(objekt.x, objekt.y),
       `${24 + objekt.y * 62}%`,
       stiSkala(objekt.y),
       12 + Math.round(objekt.y * 80),
@@ -608,14 +608,20 @@ async function spillSti(): Promise<void> {
       for (const hendelse of resultat.hendelser) {
         if (hendelse.type === "plukk") {
           spillKling(innstillinger.lydPa, hendelse.objekt === "diamant" ? 880 : 640);
+          if (tur && (hendelse.objekt === "krystall" || hendelse.objekt === "diamant")) {
+            tur = { ...tur, lomme: giBelonning(tur.lomme, hendelse.objekt) };
+          }
           visAlfGlad();
+          oppdaterHud();
         } else if (hendelse.type === "baesj") {
           spillKling(innstillinger.lydPa, 140);
           visAlfSkitten();
           if (tur) tur = { ...tur, skitten: true };
         } else {
           spillKling(innstillinger.lydPa, 180);
+          if (tur) tur = { ...tur, lomme: miltTap(tur.lomme, 1) };
           visAlfTruffet();
+          oppdaterHud();
         }
       }
       tegnSti(tilstand);
@@ -627,20 +633,15 @@ async function spillSti(): Promise<void> {
     };
     stiRamme = requestAnimationFrame(steg);
   });
-  if (tur) {
-    for (let i = 0; i < tilstand.krystaller; i++) tur = { ...tur, lomme: { ...tur.lomme, krystaller: tur.lomme.krystaller + 1 } };
-    for (let i = 0; i < tilstand.diamanter; i++) tur = { ...tur, lomme: { ...tur.lomme, diamanter: tur.lomme.diamanter + 1 } };
-    if (tilstand.zombieTreff > 0) tur = { ...tur, lomme: miltTap(tur.lomme, tilstand.zombieTreff) };
-    oppdaterHud();
-  }
+  if (tur) oppdaterHud();
   aktivSti = null;
   panel.hidden = true;
   $("skjerm-spill").classList.remove("paa-sti");
 }
 
-function settStiBane(bane: Bane): void {
+function settStiX(x: number): void {
   if (!aktivSti) return;
-  aktivSti = velgBane(aktivSti, bane);
+  aktivSti = settX(aktivSti, x);
   tegnSti(aktivSti);
 }
 
@@ -648,7 +649,7 @@ function styrAlf(klientX: number): void {
   const panel = $("sti-spill");
   const ramme = panel.getBoundingClientRect();
   if (ramme.width <= 0) return;
-  settStiBane(baneFraX((klientX - ramme.left) / ramme.width));
+  settStiX(xFraSkjerm((klientX - ramme.left) / ramme.width));
 }
 
 function bindSti(): void {
@@ -666,11 +667,11 @@ function bindSti(): void {
   window.addEventListener("keydown", (e) => {
     if (!aktivSti) return;
     if (e.key === "ArrowLeft") {
-      aktivSti = flyttBane(aktivSti, -1);
+      aktivSti = flyttX(aktivSti, -0.08);
       tegnSti(aktivSti);
     }
     if (e.key === "ArrowRight") {
-      aktivSti = flyttBane(aktivSti, 1);
+      aktivSti = flyttX(aktivSti, 0.08);
       tegnSti(aktivSti);
     }
   });

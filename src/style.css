@@ -520,7 +520,7 @@ button {
   height: 6.8rem;
   transform: translateX(-50%);
   z-index: 5;
-  transition: left 0.16s ease, transform 0.2s ease;
+  transition: none;
   pointer-events: none;
 }
 

@@ -1,23 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { baneFraX, flyttBane, startSti, stiFremgang, stiSkala, stiTick, stiVenstre, velgBane } from "./sti";
+import {
+  flyttX,
+  settX,
+  startSti,
+  stiFremgang,
+  stiSkala,
+  stiTick,
+  stiVenstre,
+  xFraSkjerm,
+} from "./sti";
 
 describe("sti", () => {
   it("starter i midten og blir ferdig etter tiden", () => {
     const start = startSti();
-    expect(start.bane).toBe(1);
+    expect(start.x).toBeCloseTo(0.5);
     expect(start.ferdig).toBe(false);
     const slutt = stiTick(start, start.tid + 0.1).tilstand;
     expect(slutt.ferdig).toBe(true);
     expect(slutt.tid).toBe(0);
   });
 
-  it("plukker krystall i samme bane og unngår zombie i annen bane", () => {
-    let t = startSti();
-    t = {
-      ...t,
+  it("plukker krystall nær Alf og unngår zombie lenger unna", () => {
+    const t = {
+      ...startSti(),
+      x: 0.5,
       objekter: [
-        { id: 1, bane: 1, y: 0.9, type: "krystall" },
-        { id: 2, bane: 0, y: 0.9, type: "zombie" },
+        { id: 1, x: 0.48, y: 0.9, type: "krystall" as const },
+        { id: 2, x: 0.12, y: 0.9, type: "zombie" as const },
       ],
     };
     const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
@@ -26,43 +35,47 @@ describe("sti", () => {
     expect(hendelser.map((h) => h.type)).toEqual(["plukk"]);
   });
 
-  it("treffer zombie i samme bane", () => {
-    const t = velgBane(
+  it("treffer zombie når Alf er nær nok", () => {
+    const t = settX(
       {
         ...startSti(),
-        objekter: [{ id: 1, bane: 2, y: 0.9, type: "zombie" }],
+        objekter: [{ id: 1, x: 0.8, y: 0.9, type: "zombie" }],
       },
-      2,
+      0.82,
     );
     const { tilstand } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.zombieTreff).toBe(1);
   });
 
-  it("deler skjermen i venstre, midten og høyre", () => {
-    expect(baneFraX(0.1)).toBe(0);
-    expect(baneFraX(0.5)).toBe(1);
-    expect(baneFraX(0.9)).toBe(2);
+  it("følger fingeren flytende, ikke i tre felt", () => {
+    expect(xFraSkjerm(0.5)).toBeCloseTo(0.5, 1);
+    expect(xFraSkjerm(0.34)).toBeLessThan(xFraSkjerm(0.41));
+    expect(xFraSkjerm(0.41)).toBeLessThan(xFraSkjerm(0.5));
+    expect(xFraSkjerm(0.58)).toBeGreaterThan(xFraSkjerm(0.5));
+    expect(xFraSkjerm(0.0)).toBeLessThan(0.12);
+    expect(xFraSkjerm(1.0)).toBeGreaterThan(0.88);
   });
 
-  it("flytter Alf ett felt og stopper i kanten", () => {
+  it("flytter Alf litt og stopper i kanten", () => {
     const midt = startSti();
-    expect(flyttBane(midt, -1).bane).toBe(0);
-    expect(flyttBane(flyttBane(midt, -1), -1).bane).toBe(0);
-    expect(flyttBane(midt, 1).bane).toBe(2);
+    expect(flyttX(midt, -0.2).x).toBeCloseTo(0.3);
+    expect(flyttX(flyttX(midt, -1), -1).x).toBeGreaterThanOrEqual(0);
+    expect(flyttX(midt, 1).x).toBeLessThanOrEqual(1);
   });
 
   it("gjør steiner større når de kommer nærmere", () => {
     expect(stiSkala(0.1)).toBeLessThan(stiSkala(0.9));
-    expect(stiVenstre(0, 0.1)).not.toBe(stiVenstre(0, 0.9));
+    expect(stiVenstre(0.1, 0.1)).not.toBe(stiVenstre(0.1, 0.9));
+    expect(stiVenstre(0.2, 0.8)).not.toBe(stiVenstre(0.7, 0.8));
   });
 
-  it("plukker bæsj i samme bane", () => {
-    const t = velgBane(
+  it("plukker bæsj nær Alf", () => {
+    const t = settX(
       {
         ...startSti(),
-        objekter: [{ id: 1, bane: 1, y: 0.9, type: "baesj" }],
+        objekter: [{ id: 1, x: 0.5, y: 0.9, type: "baesj" }],
       },
-      1,
+      0.5,
     );
     const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.baesj).toBe(1);
@@ -97,5 +110,33 @@ describe("sti", () => {
     expect(stiFremgang(40)).toBe(0);
     expect(stiFremgang(0)).toBe(1);
     expect(stiFremgang(20)).toBeCloseTo(0.5);
+  });
+
+  it("lar stein gli forbi når Alf ikke er nær nok", () => {
+    const t = {
+      ...startSti(),
+      x: 0.2,
+      objekter: [{ id: 1, x: 0.85, y: 0.9, type: "krystall" as const }],
+    };
+    const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
+    expect(tilstand.krystaller).toBe(0);
+    expect(tilstand.objekter).toHaveLength(1);
+    expect(hendelser).toEqual([]);
+  });
+
+  it("legger steiner på tilfeldig sted i veien, ikke bare tre felt", () => {
+    const xs = new Set<string>();
+    for (let i = 0; i < 12; i++) {
+      let n = 0;
+      const { tilstand } = stiTick({ ...startSti(), spawnTeller: 0.55, objekter: [] }, 0.01, () => {
+        n += 1;
+        return (0.13 * (i + n)) % 1;
+      });
+      const stein = tilstand.objekter[0];
+      expect(stein).toBeDefined();
+      xs.add((stein?.x ?? 0).toFixed(2));
+    }
+    expect(xs.size).toBeGreaterThan(3);
+    expect([...xs].every((v) => Number(v) >= 0 && Number(v) <= 1)).toBe(true);
   });
 });

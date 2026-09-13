@@ -1,14 +1,13 @@
 export const STI_SEKUNDER = 40;
-export const ANTALL_BANER = 3;
+export const PLUKK_AVSTAND = 0.18;
 
-export type Bane = 0 | 1 | 2;
 export type StiType = "krystall" | "diamant" | "zombie" | "baesj";
 export type DekorType = "hus" | "syklist" | "hund" | "barn" | "tre";
 export type DekorSide = -1 | 1;
 
 export interface StiObjekt {
   id: number;
-  bane: Bane;
+  x: number;
   y: number;
   type: StiType;
 }
@@ -21,7 +20,7 @@ export interface StiDekor {
 }
 
 export interface StiTilstand {
-  bane: Bane;
+  x: number;
   tid: number;
   nesteId: number;
   spawnTeller: number;
@@ -39,18 +38,26 @@ export interface StiHendelse {
   objekt: StiType;
 }
 
+function klem(verdi: number, min = 0, max = 1): number {
+  return Math.max(min, Math.min(max, verdi));
+}
+
+export function klemX(x: number): number {
+  return klem(x, 0.04, 0.96);
+}
+
 export function startSti(): StiTilstand {
   return {
-    bane: 1,
+    x: 0.5,
     tid: STI_SEKUNDER,
     nesteId: 16,
     spawnTeller: 0.35,
     objekter: [
-      { id: 1, bane: 0, y: 0.2, type: "krystall" },
-      { id: 2, bane: 2, y: 0.34, type: "zombie" },
-      { id: 3, bane: 1, y: 0.1, type: "diamant" },
-      { id: 14, bane: 0, y: 0.56, type: "baesj" },
-      { id: 15, bane: 1, y: 0.7, type: "krystall" },
+      { id: 1, x: 0.22, y: 0.2, type: "krystall" },
+      { id: 2, x: 0.81, y: 0.34, type: "zombie" },
+      { id: 3, x: 0.47, y: 0.1, type: "diamant" },
+      { id: 14, x: 0.33, y: 0.56, type: "baesj" },
+      { id: 15, x: 0.64, y: 0.7, type: "krystall" },
     ],
     dekor: [
       { id: 4, side: -1, y: 0.06, type: "hus" },
@@ -72,43 +79,44 @@ export function startSti(): StiTilstand {
   };
 }
 
-export function velgBane(tilstand: StiTilstand, bane: Bane): StiTilstand {
-  return { ...tilstand, bane };
+export function settX(tilstand: StiTilstand, x: number): StiTilstand {
+  return { ...tilstand, x: klemX(x) };
 }
 
-export function baneFraX(rel: number): Bane {
-  if (rel < 1 / 3) return 0;
-  if (rel < 2 / 3) return 1;
-  return 2;
+export function stiSpre(y: number): number {
+  return 10 + klem(y) * 28;
 }
 
-export function flyttBane(tilstand: StiTilstand, steg: -1 | 1): StiTilstand {
-  const bane = Math.max(0, Math.min(2, tilstand.bane + steg)) as Bane;
-  return { ...tilstand, bane };
+export function xFraSkjerm(rel: number, y = 0.92): number {
+  const spre = stiSpre(y) / 100;
+  const venstre = 0.5 - spre;
+  const hoyre = 0.5 + spre;
+  if (hoyre <= venstre) return 0.5;
+  return klemX((rel - venstre) / (hoyre - venstre));
+}
+
+export function flyttX(tilstand: StiTilstand, steg: number): StiTilstand {
+  return settX(tilstand, tilstand.x + steg);
 }
 
 export function stiSkala(y: number): number {
-  const klem = Math.max(0, Math.min(1, y));
-  return 0.42 + klem * 1.05;
+  return 0.42 + klem(y) * 1.05;
 }
 
-export function stiVenstre(bane: Bane, y: number): string {
-  const klem = Math.max(0, Math.min(1, y));
-  const spre = 10 + klem * 28;
-  return `${50 + (bane - 1) * spre}%`;
+export function stiVenstre(x: number, y: number): string {
+  return `${50 + (klem(x) - 0.5) * 2 * stiSpre(y)}%`;
 }
 
 export function stiDekorVenstre(side: DekorSide, y: number): string {
-  const klem = Math.max(0, Math.min(1, y));
-  return `${50 + side * (18 + klem * 24)}%`;
+  return `${50 + side * (18 + klem(y) * 24)}%`;
 }
 
 export function stiFremgang(tid: number): number {
-  return Math.max(0, Math.min(1, 1 - tid / STI_SEKUNDER));
+  return klem(1 - tid / STI_SEKUNDER);
 }
 
-function tilfeldigBane(tilfeldig: () => number): Bane {
-  return Math.floor(tilfeldig() * ANTALL_BANER) as Bane;
+function tilfeldigVeiX(tilfeldig: () => number): number {
+  return 0.08 + tilfeldig() * 0.84;
 }
 
 function tilfeldigType(tilfeldig: () => number): StiType {
@@ -126,6 +134,10 @@ function tilfeldigDekor(tilfeldig: () => number): DekorType {
   if (r < 0.66) return "syklist";
   if (r < 0.84) return "hund";
   return "barn";
+}
+
+function treffer(alfX: number, objektX: number): boolean {
+  return Math.abs(alfX - objektX) <= PLUKK_AVSTAND;
 }
 
 export function stiTick(
@@ -157,7 +169,8 @@ export function stiTick(
     if (objekt.y > 1.12) {
       continue;
     }
-    if (objekt.bane !== tilstand.bane) {
+    if (!treffer(tilstand.x, objekt.x)) {
+      beholdt.push(objekt);
       continue;
     }
     if (objekt.type === "zombie") {
@@ -179,7 +192,7 @@ export function stiTick(
     spawnTeller = 0;
     beholdt.push({
       id: nesteId,
-      bane: tilfeldigBane(tilfeldig),
+      x: tilfeldigVeiX(tilfeldig),
       y: -0.12,
       type: tilfeldigType(tilfeldig),
     });
