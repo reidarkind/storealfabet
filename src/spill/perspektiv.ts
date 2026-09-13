@@ -90,20 +90,16 @@ export function prosjektDekor(side: -1 | 1, dist: number, tid: number): Prosjekt
   return prosjektDist(side < 0 ? -0.16 : 1.16, dist, tid);
 }
 
-export function skolePunkt(tid: number): Prosjekt {
-  let z = 0.09;
-  for (let s = 0.07; s <= 0.34; s += 0.025) {
-    if (!bakomBakke(s, tid)) {
-      z = s;
-      break;
-    }
-  }
+export function skolePunkt(tid: number, etappe = 1, antallStopp = 6): Prosjekt {
+  const iEtappe = klem(1 - tid / STI_SEKUNDER);
+  const fram = klem((etappe - 1 + iEtappe) / Math.max(1, antallStopp));
+  const z = 0.075 + fram * 0.82;
   const vei = veiPunkt(z, tid);
-  const fram = klem(1 - tid / STI_SEKUNDER);
+  const t = perspektivT(z);
   return {
     left: vei.cx,
     top: vei.cy,
-    skala: 0.32 + fram * 0.4,
+    skala: 0.34 + t * 1.45,
     synlig: true,
   };
 }

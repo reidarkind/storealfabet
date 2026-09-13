@@ -662,7 +662,7 @@ function tegnSti(tilstand: StiTilstand): void {
   foran.src = bildeUrl("alf.svg");
   const skole = $("sti-skole") as HTMLImageElement;
   const wrap = $("sti-skole-wrap");
-  const skoleP = skolePunkt(tilstand.tid);
+  const skoleP = skolePunkt(tilstand.tid, tur?.stopp ?? 1);
   skole.src = bildeUrl("skole.svg");
   wrap.hidden = false;
   wrap.style.left = `${skoleP.left}%`;

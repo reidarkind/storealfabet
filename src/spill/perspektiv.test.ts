@@ -45,12 +45,22 @@ describe("perspektiv", () => {
   });
 
   it("setter skolen på veien i det fjerne", () => {
-    const start = skolePunkt(40);
-    const slutt = skolePunkt(0);
+    const start = skolePunkt(40, 1);
     expect(start.synlig).toBe(true);
     expect(start.top).toBeGreaterThan(10);
     expect(start.top).toBeLessThan(50);
-    expect(slutt.skala).toBeGreaterThan(start.skala);
-    expect(slutt.skala).toBeLessThan(1.1);
+    expect(start.skala).toBeLessThan(0.7);
+  });
+
+  it("lar skolen komme nærmere gjennom turen til Alf er framme", () => {
+    const start = skolePunkt(40, 1);
+    const midt = skolePunkt(20, 3);
+    const slutt = skolePunkt(0, 6);
+    expect(midt.skala).toBeGreaterThan(start.skala);
+    expect(slutt.skala).toBeGreaterThan(midt.skala);
+    expect(slutt.top).toBeGreaterThan(start.top + 20);
+    expect(slutt.top).toBeGreaterThan(70);
+    expect(skolePunkt(0, 1).skala).toBeGreaterThan(start.skala);
+    expect(skolePunkt(40, 6).skala).toBeGreaterThan(skolePunkt(40, 5).skala);
   });
 });

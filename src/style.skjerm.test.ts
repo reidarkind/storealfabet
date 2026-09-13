@@ -7,6 +7,11 @@ describe("skjerm-synlighet", () => {
     expect(css).toMatch(/\.skjerm\[hidden\]\s*\{[^}]*display:\s*none/);
   });
 
+  it("skjuler den lille veibanen under lekser", () => {
+    const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
+    expect(css).toMatch(/\.skjerm\.spill:not\(\.paa-sti\)\s+\.verden-wrap\s*\{[^}]*display:\s*none/);
+  });
+
   it("dekker veien med startskjerm under 3-2-1", () => {
     const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
     expect(css).toMatch(/#sti-start\s*\{[^}]*position:\s*absolute/);

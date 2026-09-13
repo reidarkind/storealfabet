@@ -89,6 +89,10 @@ body {
   display: none;
 }
 
+.skjerm.spill:not(.paa-sti) .verden-wrap {
+  display: none;
+}
+
 select {
   font: inherit;
   font-weight: 800;
@@ -297,8 +301,8 @@ button {
 }
 
 #sti-skole {
-  width: 3.4rem;
-  height: 3rem;
+  width: 7.2rem;
+  height: 6.4rem;
   object-fit: contain;
 }
 
