@@ -9,10 +9,11 @@ import {
   stiSkala,
   stiTick,
   stiVenstre,
+  trafikkHint,
   xFraSkjerm,
 } from "./sti";
 
-function nær(x: number, type: "krystall" | "zombie" | "baesj" | "diamant", tid = STI_SEKUNDER) {
+function nær(x: number, type: "krystall" | "zombie" | "baesj" | "diamant" | "syklist" | "bil", tid = STI_SEKUNDER) {
   return { id: 1, x, dist: distFraZ(0.9, tid), type };
 }
 
@@ -147,5 +148,45 @@ describe("sti", () => {
     }
     expect(xs.size).toBeGreaterThan(3);
     expect([...xs].every((v) => Number(v) >= 0 && Number(v) <= 1)).toBe(true);
+  });
+
+  it("har syklist og bil i veien, ikke som pynt i grøfta", () => {
+    const start = startSti();
+    expect(start.objekter.some((o) => o.type === "syklist")).toBe(true);
+    expect(start.objekter.some((o) => o.type === "bil")).toBe(true);
+    expect(start.dekor.some((d) => d.type === "syklist")).toBe(false);
+  });
+
+  it("sier ifra om trafikk uten å stanse veien", () => {
+    const t = settX(
+      {
+        ...startSti(),
+        objekter: [nær(0.5, "syklist")],
+      },
+      0.5,
+    );
+    const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.2);
+    expect(hendelser[0]?.type).toBe("trafikk");
+    expect(hendelser[0]?.objekt).toBe("syklist");
+    expect(hendelser[0]?.tekst).toBeTruthy();
+    expect(tilstand.ferdig).toBe(false);
+  });
+
+  it("lar syklisten sykle mot Alf", () => {
+    const dist = distFraZ(0.4, STI_SEKUNDER);
+    const t = {
+      ...startSti(),
+      objekter: [{ id: 1, x: 0.4, dist, type: "syklist" as const }],
+    };
+    const { tilstand } = stiTick(t, 0.2, () => 0.99);
+    expect(tilstand.objekter[0]?.dist).toBeLessThan(dist);
+  });
+
+  it("gir ulike trafikkhint", () => {
+    const a = trafikkHint("bil", () => 0.1);
+    const b = trafikkHint("syklist", () => 0.8);
+    expect(a.length).toBeGreaterThan(8);
+    expect(b.length).toBeGreaterThan(8);
+    expect(a).not.toBe(b);
   });
 });

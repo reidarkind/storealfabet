@@ -17,7 +17,7 @@ import {
   startTur,
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
-import { flyttX, settX, startSti, stiFremgang, stiTick, xFraSkjerm, type StiTilstand } from "./spill/sti";
+import { flyttX, settX, startSti, stiFremgang, stiTick, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -323,7 +323,7 @@ async function videreEtterStopp(): Promise<void> {
   $("oppgave-kort").hidden = true;
   $("skjerm-spill").classList.remove("tegn-modus");
     $("skjerm-spill").classList.remove("paa-sti");
-  $("hint-linje").textContent = "Videre mot skolen! Plukk steiner og hopp unna zombier.";
+  $("hint-linje").textContent = "Videre mot skolen! Se opp for trafikk og zombier.";
   if (await spillSti()) {
     await startZombieDuell(true);
     return;
@@ -655,7 +655,7 @@ function tegnSti(tilstand: StiTilstand): void {
       `sti-ting-${objekt.id}`,
       `sti-ting ${objekt.type}`,
       bildeUrl(`${objekt.type}.svg`),
-      objekt.type === "baesj" ? "hundebæsj" : objekt.type,
+      objekt.type === "baesj" ? "hundebæsj" : objekt.type === "bil" ? "bil" : objekt.type,
       p.left,
       p.top,
       p.skala,
@@ -698,6 +698,19 @@ function visAlfSkitten(): void {
   $("sti-hjelp").textContent = "Æsj! Ikke plukk hundebæsj. Alf stinker.";
 }
 
+function visAlfTrafikk(hendelse: StiHendelse): void {
+  const tekst = hendelse.tekst ?? "Pass deg for trafikken!";
+  const alf = $("sti-alf");
+  alf.classList.add("truffet");
+  $("sti-spill").classList.add("humper");
+  $("sti-hjelp").textContent = tekst;
+  if (innstillinger.lydPa) si(tekst, true);
+  window.setTimeout(() => {
+    alf.classList.remove("truffet");
+    $("sti-spill").classList.remove("humper");
+  }, 800);
+}
+
 async function spillSti(): Promise<boolean> {
   const panel = $("sti-spill");
   $("skjerm-spill").classList.add("paa-sti");
@@ -731,6 +744,9 @@ async function spillSti(): Promise<boolean> {
           spillKling(innstillinger.lydPa, 140);
           visAlfSkitten();
           if (tur) tur = { ...tur, skitten: true };
+        } else if (hendelse.type === "trafikk") {
+          spillKling(innstillinger.lydPa, 210);
+          visAlfTrafikk(hendelse);
         } else {
           spillKling(innstillinger.lydPa, 180);
           visAlfTruffet();

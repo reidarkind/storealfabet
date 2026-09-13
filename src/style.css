@@ -502,6 +502,17 @@ button {
   height: 4.2rem;
 }
 
+.sti-ting.syklist {
+  width: 4.2rem;
+  height: 4.6rem;
+}
+
+.sti-ting.bil {
+  width: 5.4rem;
+  height: 4.2rem;
+  filter: drop-shadow(0 0 6px #c45c7a88);
+}
+
 .sti-ting.zombie {
   width: 4.8rem;
   height: 4.8rem;

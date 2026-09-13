@@ -3,8 +3,9 @@ import { distFraZ, prosjektPunkt, veiPunkt, zFraDist } from "./perspektiv";
 export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
 
-export type StiType = "krystall" | "diamant" | "zombie" | "baesj";
-export type DekorType = "hus" | "syklist" | "hund" | "barn" | "tre";
+export type StiType = "krystall" | "diamant" | "zombie" | "baesj" | "syklist" | "bil";
+export type DekorType = "hus" | "hund" | "barn" | "tre";
+export type TrafikkType = "syklist" | "bil";
 export type DekorSide = -1 | 1;
 
 export interface StiObjekt {
@@ -36,8 +37,29 @@ export interface StiTilstand {
 }
 
 export interface StiHendelse {
-  type: "plukk" | "treff" | "baesj";
+  type: "plukk" | "treff" | "baesj" | "trafikk";
   objekt: StiType;
+  tekst?: string;
+}
+
+export const TRAFIKK_HINT_SYKKEL = [
+  "Pass på syklisten!",
+  "Sykler trenger plass i veien.",
+  "Gå på fortauet, Alf!",
+  "Se deg for før du krysser!",
+];
+
+export const TRAFIKK_HINT_BIL = [
+  "Pass deg for trafikken!",
+  "Bilen så deg ikke. Bruk fortauet.",
+  "Biler kjører fort. Gå på fortauet.",
+  "Se til begge sider!",
+  "Hold deg i veikanten.",
+];
+
+export function trafikkHint(type: TrafikkType, tilfeldig = Math.random): string {
+  const liste = type === "bil" ? TRAFIKK_HINT_BIL : TRAFIKK_HINT_SYKKEL;
+  return liste[Math.floor(tilfeldig() * liste.length)] ?? "Pass deg for trafikken!";
 }
 
 function klem(verdi: number, min = 0, max = 1): number {
@@ -60,7 +82,7 @@ export function startSti(): StiTilstand {
   return {
     x: 0.5,
     tid: STI_SEKUNDER,
-    nesteId: 16,
+    nesteId: 18,
     spawnTeller: 0.35,
     objekter: [
       veiTing(1, 0.22, 0.2, "krystall"),
@@ -68,18 +90,20 @@ export function startSti(): StiTilstand {
       veiTing(3, 0.47, 0.1, "diamant"),
       veiTing(14, 0.33, 0.56, "baesj"),
       veiTing(15, 0.64, 0.7, "krystall"),
+      veiTing(16, 0.18, 0.42, "syklist"),
+      veiTing(17, 0.78, 0.28, "bil"),
     ],
     dekor: [
       veiDekor(4, -1, 0.06, "hus"),
       veiDekor(5, 1, 0.12, "tre"),
-      veiDekor(6, -1, 0.24, "syklist"),
+      veiDekor(6, -1, 0.24, "barn"),
       veiDekor(7, 1, 0.2, "hus"),
       veiDekor(8, -1, 0.38, "hund"),
       veiDekor(9, 1, 0.34, "barn"),
       veiDekor(10, -1, 0.52, "tre"),
       veiDekor(11, 1, 0.58, "hund"),
       veiDekor(12, -1, 0.68, "hus"),
-      veiDekor(13, 1, 0.76, "syklist"),
+      veiDekor(13, 1, 0.76, "tre"),
     ],
     krystaller: 0,
     diamanter: 0,
@@ -123,19 +147,26 @@ function tilfeldigVeiX(tilfeldig: () => number): number {
 
 function tilfeldigType(tilfeldig: () => number): StiType {
   const r = tilfeldig();
-  if (r < 0.16) return "zombie";
-  if (r < 0.26) return "baesj";
-  if (r < 0.38) return "diamant";
+  if (r < 0.12) return "zombie";
+  if (r < 0.2) return "baesj";
+  if (r < 0.32) return "syklist";
+  if (r < 0.44) return "bil";
+  if (r < 0.56) return "diamant";
   return "krystall";
 }
 
 function tilfeldigDekor(tilfeldig: () => number): DekorType {
   const r = tilfeldig();
-  if (r < 0.26) return "hus";
-  if (r < 0.48) return "tre";
-  if (r < 0.66) return "syklist";
-  if (r < 0.84) return "hund";
+  if (r < 0.32) return "hus";
+  if (r < 0.58) return "tre";
+  if (r < 0.8) return "hund";
   return "barn";
+}
+
+function trafikkFart(type: StiType): number {
+  if (type === "bil") return 1.5;
+  if (type === "syklist") return 0.75;
+  return 0;
 }
 
 function treffer(alfX: number, objektX: number): boolean {
@@ -161,7 +192,9 @@ export function stiTick(
   let baesj = tilstand.baesj;
   const beholdt: StiObjekt[] = [];
 
-  for (const objekt of tilstand.objekter) {
+  for (const raw of tilstand.objekter) {
+    const fart = trafikkFart(raw.type);
+    const objekt = fart ? { ...raw, dist: raw.dist - dt * fart } : raw;
     const z = zFraDist(objekt.dist, tid);
     if (z < 0.86) {
       beholdt.push(objekt);
@@ -177,6 +210,12 @@ export function stiTick(
     if (objekt.type === "zombie") {
       zombieTreff += 1;
       hendelser.push({ type: "treff", objekt: "zombie" });
+    } else if (objekt.type === "syklist" || objekt.type === "bil") {
+      hendelser.push({
+        type: "trafikk",
+        objekt: objekt.type,
+        tekst: trafikkHint(objekt.type, tilfeldig),
+      });
     } else if (objekt.type === "baesj") {
       baesj += 1;
       hendelser.push({ type: "baesj", objekt: "baesj" });
