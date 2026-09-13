@@ -4,6 +4,7 @@ import {
   flyttX,
   settX,
   startSti,
+  fortsettEtterZombie,
   STI_SEKUNDER,
   stiFremgang,
   stiSkala,
@@ -55,6 +56,22 @@ describe("sti", () => {
     const { tilstand } = stiTick(t, 0.01, () => 0.99);
     expect(tilstand.zombieTreff).toBe(1);
     expect(tilstand.ferdig).toBe(true);
+  });
+
+  it("etter zombieduell kan Alf gå videre på samme vei", () => {
+    const t = settX(
+      {
+        ...startSti(),
+        tid: 28,
+        objekter: [nær(0.8, "zombie", 28)],
+      },
+      0.82,
+    );
+    const truffet = stiTick(t, 0.01, () => 0.99).tilstand;
+    const videre = fortsettEtterZombie(truffet);
+    expect(videre.ferdig).toBe(false);
+    expect(videre.zombieTreff).toBe(0);
+    expect(videre.tid).toBeCloseTo(truffet.tid);
   });
 
   it("følger fingeren flytende, ikke i tre felt", () => {

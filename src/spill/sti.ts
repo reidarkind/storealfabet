@@ -103,6 +103,14 @@ function veiDekor(id: number, side: DekorSide, z: number, type: DekorType): StiD
   return { id, side, dist: distFraZ(z, STI_SEKUNDER), type };
 }
 
+export function fortsettEtterZombie(tilstand: StiTilstand): StiTilstand {
+  return {
+    ...tilstand,
+    ferdig: false,
+    zombieTreff: 0,
+  };
+}
+
 export function startSti(): StiTilstand {
   return {
     x: 0.5,

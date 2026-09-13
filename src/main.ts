@@ -18,7 +18,7 @@ import {
   startTur,
 } from "./spill/tur";
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
-import { flyttX, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
+import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { SvarVakt } from "./spill/svar-vakt";
 import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
 import { ALF_STEMME, aktiverLyd, kanSnakke, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
@@ -37,6 +37,7 @@ let timerId = 0;
 let gjenstaende = TID;
 let tegner = false;
 let aktivSti: StiTilstand | null = null;
+let pausetSti: StiTilstand | null = null;
 let duellFraSti = false;
 let stiPauset = false;
 let startLopenr = 0;
@@ -168,6 +169,7 @@ async function startSpill(): Promise<void> {
   tur = startTur(innstillinger);
   iDuell = false;
   duellFraSti = false;
+  pausetSti = null;
   tegneForsok = 0;
   oppdaterHud();
   $("oppgave-kort").hidden = true;
@@ -348,6 +350,13 @@ async function etterSvar(riktig: boolean, hint: string, prefiks?: string): Promi
     await vent(1000);
     if (duellFraSti) {
       duellFraSti = false;
+      if (await fortsettSpillSti()) {
+        await startZombieDuell(true);
+        return;
+      }
+      if (!tur) return;
+      visLekseStopp(tur.stopp);
+      oppdaterHud();
       await nesteOppgave();
       return;
     }
@@ -515,6 +524,7 @@ function bindTegning(): void {
     stoppTale();
     cancelAnimationFrame(stiRamme);
     aktivSti = null;
+    pausetSti = null;
     duellFraSti = false;
     $("sti-start").hidden = true;
     $("sti-spill").hidden = true;
@@ -812,7 +822,14 @@ async function visStartNedtelling(): Promise<boolean> {
   return true;
 }
 
-async function spillSti(medStart = false): Promise<boolean> {
+async function fortsettSpillSti(): Promise<boolean> {
+  const igjen = pausetSti ? fortsettEtterZombie(pausetSti) : null;
+  pausetSti = null;
+  if (!igjen || igjen.tid <= 0) return false;
+  return spillSti(false, igjen);
+}
+
+async function spillSti(medStart = false, gjenopptatt?: StiTilstand): Promise<boolean> {
   const panel = $("sti-spill");
   $("skjerm-spill").classList.add("paa-sti");
   panel.hidden = false;
@@ -823,10 +840,10 @@ async function spillSti(medStart = false): Promise<boolean> {
   $("sti-treff").hidden = true;
   if (!medStart) $("sti-start").hidden = true;
   $("sti-lag").innerHTML = "";
-  aktivSti = startSti();
+  aktivSti = gjenopptatt ?? startSti();
   let tilstand = aktivSti;
   tegnSti(tilstand);
-  if (medStart) {
+  if (medStart && !gjenopptatt) {
     stiPauset = true;
     const ok = await visStartNedtelling();
     stiPauset = false;
@@ -873,7 +890,10 @@ async function spillSti(medStart = false): Promise<boolean> {
   });
   if (tur) oppdaterHud();
   const duell = tilstand.zombieTreff > 0;
-  if (duell) await vent(900);
+  if (duell) {
+    pausetSti = tilstand;
+    await vent(900);
+  }
   $("sti-alf").classList.remove("gaar");
   aktivSti = null;
   panel.hidden = true;
