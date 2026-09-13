@@ -1,3 +1,5 @@
+import { prosjektPunkt, veiPunkt } from "./perspektiv";
+
 export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
 
@@ -83,14 +85,10 @@ export function settX(tilstand: StiTilstand, x: number): StiTilstand {
   return { ...tilstand, x: klemX(x) };
 }
 
-export function stiSpre(y: number): number {
-  return 10 + klem(y) * 28;
-}
-
-export function xFraSkjerm(rel: number, y = 0.92): number {
-  const spre = stiSpre(y) / 100;
-  const venstre = 0.5 - spre;
-  const hoyre = 0.5 + spre;
+export function xFraSkjerm(rel: number, tid = STI_SEKUNDER): number {
+  const vei = veiPunkt(0.92, tid);
+  const venstre = (vei.cx - vei.halv) / 100;
+  const hoyre = (vei.cx + vei.halv) / 100;
   if (hoyre <= venstre) return 0.5;
   return klemX((rel - venstre) / (hoyre - venstre));
 }
@@ -99,16 +97,12 @@ export function flyttX(tilstand: StiTilstand, steg: number): StiTilstand {
   return settX(tilstand, tilstand.x + steg);
 }
 
-export function stiSkala(y: number): number {
-  return 0.42 + klem(y) * 1.05;
+export function stiSkala(y: number, tid = STI_SEKUNDER): number {
+  return prosjektPunkt(0.5, y, tid).skala;
 }
 
-export function stiVenstre(x: number, y: number): string {
-  return `${50 + (klem(x) - 0.5) * 2 * stiSpre(y)}%`;
-}
-
-export function stiDekorVenstre(side: DekorSide, y: number): string {
-  return `${50 + side * (18 + klem(y) * 24)}%`;
+export function stiVenstre(x: number, y: number, tid = STI_SEKUNDER): string {
+  return `${prosjektPunkt(x, y, tid).left}%`;
 }
 
 export function stiFremgang(tid: number): number {
@@ -193,21 +187,21 @@ export function stiTick(
     beholdt.push({
       id: nesteId,
       x: tilfeldigVeiX(tilfeldig),
-      y: -0.12,
+      y: 0.03,
       type: tilfeldigType(tilfeldig),
     });
     nesteId += 1;
     dekor.push({
       id: nesteId,
       side: -1,
-      y: -0.18,
+      y: 0.02,
       type: tilfeldigDekor(tilfeldig),
     });
     nesteId += 1;
     dekor.push({
       id: nesteId,
       side: 1,
-      y: -0.1,
+      y: 0.05,
       type: tilfeldigDekor(tilfeldig),
     });
     nesteId += 1;

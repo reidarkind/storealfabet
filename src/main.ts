@@ -16,7 +16,8 @@ import {
   startDuell,
   startTur,
 } from "./spill/tur";
-import { flyttX, settX, startSti, stiDekorVenstre, stiFremgang, stiSkala, stiTick, stiVenstre, xFraSkjerm, type StiTilstand } from "./spill/sti";
+import { prosjektDekor, prosjektPunkt, veiAvstand, veiPunkt } from "./spill/perspektiv";
+import { flyttX, settX, startSti, stiFremgang, stiTick, xFraSkjerm, type StiTilstand } from "./spill/sti";
 import { aktiverLyd, harTale, norskeStemmer, settStemme, si, spillKling, stoppTale } from "./tale/tale";
 import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
@@ -482,10 +483,11 @@ function oppdaterStiTing(
   klasser: string,
   src: string,
   alt: string,
-  left: string,
-  top: string,
+  left: number,
+  top: number,
   skala: number,
   z: number,
+  synlig: boolean,
   levende: Set<string>,
 ): void {
   levende.add(id);
@@ -498,16 +500,98 @@ function oppdaterStiTing(
     lag.append(el);
   }
   el.className = klasser;
-  el.style.left = left;
-  el.style.top = top;
-  el.style.transform = `translateX(-50%) scale(${skala})`;
+  el.hidden = !synlig;
+  el.style.left = `${left}%`;
+  el.style.top = `${top}%`;
+  el.style.transform = `translate(-50%, -92%) scale(${skala})`;
   el.style.zIndex = String(z);
+}
+
+function tegnVeiLerret(tilstand: StiTilstand): void {
+  const canvas = $("sti-lerret") as HTMLCanvasElement;
+  const panel = $("sti-spill");
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = panel.clientWidth;
+  const h = panel.clientHeight;
+  if (w <= 0 || h <= 0) return;
+  if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const hor = veiPunkt(0.02, tilstand.tid);
+  const hy = (hor.cy / 100) * h;
+  const himmel = ctx.createLinearGradient(0, 0, 0, Math.max(8, hy));
+  himmel.addColorStop(0, "#7eb6d9");
+  himmel.addColorStop(0.55, "#b9ddef");
+  himmel.addColorStop(1, "#d7ead4");
+  ctx.fillStyle = himmel;
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "#f8e7b0";
+  ctx.beginPath();
+  ctx.arc((hor.cx / 100) * w, Math.max(18, hy * 0.32), 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3d6b38";
+  ctx.fillRect(0, hy, w, Math.max(1, h - hy));
+  const n = 58;
+  const fase = veiAvstand(tilstand.tid);
+  for (let i = 0; i < n; i++) {
+    const z0 = i / n;
+    const z1 = (i + 1) / n;
+    const a = veiPunkt(z0, tilstand.tid);
+    const b = veiPunkt(z1, tilstand.tid);
+    const y0 = (a.cy / 100) * h;
+    const y1 = (b.cy / 100) * h;
+    if (y1 <= y0 + 0.2) continue;
+    ctx.fillStyle = i % 2 ? "#3d6b38" : "#4a8f44";
+    ctx.fillRect(0, y0, w, y1 - y0);
+    const ax0 = ((a.cx - a.halv) / 100) * w;
+    const ax1 = ((a.cx + a.halv) / 100) * w;
+    const bx0 = ((b.cx - b.halv) / 100) * w;
+    const bx1 = ((b.cx + b.halv) / 100) * w;
+    ctx.fillStyle = i % 2 ? "#5c6168" : "#484c52";
+    ctx.beginPath();
+    ctx.moveTo(ax0, y0);
+    ctx.lineTo(ax1, y0);
+    ctx.lineTo(bx1, y1);
+    ctx.lineTo(bx0, y1);
+    ctx.closePath();
+    ctx.fill();
+    const stripe = Math.max(2, (a.halv * 0.07 / 100) * w);
+    ctx.fillStyle = i % 2 ? "#c45c7a" : "#fff4dc";
+    ctx.beginPath();
+    ctx.moveTo(ax0, y0);
+    ctx.lineTo(ax0 + stripe, y0);
+    ctx.lineTo(bx0 + stripe, y1);
+    ctx.lineTo(bx0, y1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(ax1 - stripe, y0);
+    ctx.lineTo(ax1, y0);
+    ctx.lineTo(bx1, y1);
+    ctx.lineTo(bx1 - stripe, y1);
+    ctx.closePath();
+    ctx.fill();
+    if (Math.floor(fase * 7 + i * 0.65) % 2 === 0) {
+      const midt = Math.max(1.2, (a.halv * 0.045 / 100) * w);
+      ctx.fillStyle = "#f4d27a";
+      ctx.fillRect((a.cx / 100) * w - midt / 2, y0, midt, y1 - y0);
+    }
+  }
 }
 
 function tegnSti(tilstand: StiTilstand): void {
   $("sti-ur").textContent = String(Math.ceil(tilstand.tid));
+  tegnVeiLerret(tilstand);
   const alf = $("sti-alf");
-  alf.style.left = stiVenstre(tilstand.x, 0.92);
+  const alfP = prosjektPunkt(tilstand.x, 0.92, tilstand.tid);
+  alf.style.left = `${alfP.left}%`;
+  alf.style.top = `${alfP.top}%`;
   alf.dataset.sekk = innstillinger.sekk;
   $("sti-sekk").className = `sekk-${innstillinger.sekk}`;
   const bak = document.querySelector("#sti-alf .alf-pose.bak") as HTMLImageElement;
@@ -517,36 +601,44 @@ function tegnSti(tilstand: StiTilstand): void {
   const skole = $("sti-skole") as HTMLImageElement;
   const wrap = $("sti-skole-wrap");
   const fram = stiFremgang(tilstand.tid);
+  const hor = veiPunkt(0.03, tilstand.tid);
+  const skoleP = prosjektPunkt(0.5, 0.05 + fram * 0.12, tilstand.tid);
   skole.src = bildeUrl("skole.svg");
-  wrap.style.top = `${26 + fram * 8}%`;
-  wrap.style.transform = `translate(-50%, -92%) scale(${0.85 + fram * 1.55})`;
+  wrap.hidden = !skoleP.synlig;
+  wrap.style.left = `${hor.cx}%`;
+  wrap.style.top = `${hor.cy}%`;
+  wrap.style.transform = `translate(-50%, -100%) scale(${0.28 + fram * 1.7})`;
   const lag = $("sti-lag");
   const levende = new Set<string>();
   for (const objekt of tilstand.dekor) {
+    const p = prosjektDekor(objekt.side, objekt.y, tilstand.tid);
     oppdaterStiTing(
       lag,
       `sti-dekor-${objekt.id}`,
       `sti-ting ${objekt.type}`,
       bildeUrl(`${objekt.type}.svg`),
       objekt.type,
-      stiDekorVenstre(objekt.side, objekt.y),
-      `${20 + objekt.y * 64}%`,
-      stiSkala(objekt.y),
-      4 + Math.round(objekt.y * 40),
+      p.left,
+      p.top,
+      p.skala,
+      2 + Math.round(objekt.y * 8),
+      p.synlig,
       levende,
     );
   }
   for (const objekt of tilstand.objekter) {
+    const p = prosjektPunkt(objekt.x, objekt.y, tilstand.tid);
     oppdaterStiTing(
       lag,
       `sti-ting-${objekt.id}`,
       `sti-ting ${objekt.type}`,
       bildeUrl(`${objekt.type}.svg`),
       objekt.type === "baesj" ? "hundebæsj" : objekt.type,
-      stiVenstre(objekt.x, objekt.y),
-      `${24 + objekt.y * 62}%`,
-      stiSkala(objekt.y),
-      12 + Math.round(objekt.y * 80),
+      p.left,
+      p.top,
+      p.skala,
+      3 + Math.round(objekt.y * 10),
+      p.synlig,
       levende,
     );
   }
@@ -649,7 +741,7 @@ function styrAlf(klientX: number): void {
   const panel = $("sti-spill");
   const ramme = panel.getBoundingClientRect();
   if (ramme.width <= 0) return;
-  settStiX(xFraSkjerm((klientX - ramme.left) / ramme.width));
+  settStiX(xFraSkjerm((klientX - ramme.left) / ramme.width, aktivSti?.tid));
 }
 
 function bindSti(): void {
