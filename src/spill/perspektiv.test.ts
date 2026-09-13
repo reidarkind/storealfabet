@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bakomBakke, prosjektDist, prosjektPunkt, skolePunkt, veiAvstand, veiEndeZ, veiPunkt, veiPunktDist, veiSvingVed, zFraDist } from "./perspektiv";
+import { bakomBakke, bakomSkole, prosjektDist, prosjektPunkt, skolePunkt, skoleZ, veiAvstand, veiEndeZ, veiPunkt, veiPunktDist, veiSvingVed, zFraDist } from "./perspektiv";
 
 describe("perspektiv", () => {
   it("legger stein på veien ved forsvinningspunktet, ikke i himmelen", () => {
@@ -70,6 +70,14 @@ describe("perspektiv", () => {
     expect(veiEndeZ()).toBeGreaterThan(0.03);
     expect(Math.abs(ende.cy - tidlig.top)).toBeLessThan(8);
     expect(prosjektPunkt(0.5, 0.01, 20).synlig).toBe(false);
+  });
+
+  it("skjuler veiting bak skolen når Alf er nær", () => {
+    expect(bakomSkole(0.1, 0, 6)).toBe(true);
+    expect(bakomSkole(0.92, 0, 6)).toBe(false);
+    expect(prosjektPunkt(0.5, 0.12, 0, true, 6).synlig).toBe(false);
+    expect(prosjektPunkt(0.5, 0.92, 0, true, 6).synlig).toBe(true);
+    expect(skoleZ(0, 6)).toBeGreaterThan(skoleZ(40, 1));
   });
 
   it("lar veiting synes i det fjerne selv om en bakke er foran", () => {

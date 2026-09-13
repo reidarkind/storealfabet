@@ -74,7 +74,7 @@ export function bakomBakke(z: number, tid: number): boolean {
   return false;
 }
 
-export function prosjektDist(x: number, dist: number, tid: number, skjulBakBakke = true): Prosjekt {
+export function prosjektDist(x: number, dist: number, tid: number, skjulBakBakke = true, etappe = 1): Prosjekt {
   const z = zFraDist(dist, tid);
   const vei = veiPunktDist(dist, tid);
   const t = perspektivT(z);
@@ -82,16 +82,21 @@ export function prosjektDist(x: number, dist: number, tid: number, skjulBakBakke
     left: vei.cx + (x - 0.5) * 2 * vei.halv,
     top: vei.cy,
     skala: 0.02 + t * 1.35,
-    synlig: z > veiEndeZ() && z < 1.18 && t > 0.008 && !(skjulBakBakke && bakomBakke(z, tid)),
+    synlig:
+      z > veiEndeZ() &&
+      z < 1.18 &&
+      t > 0.008 &&
+      !(skjulBakBakke && bakomBakke(z, tid)) &&
+      !bakomSkole(z, tid, etappe),
   };
 }
 
-export function prosjektPunkt(x: number, z: number, tid: number, skjulBakBakke = true): Prosjekt {
-  return prosjektDist(x, distFraZ(z, tid), tid, skjulBakBakke);
+export function prosjektPunkt(x: number, z: number, tid: number, skjulBakBakke = true, etappe = 1): Prosjekt {
+  return prosjektDist(x, distFraZ(z, tid), tid, skjulBakBakke, etappe);
 }
 
-export function prosjektDekor(side: -1 | 1, dist: number, tid: number): Prosjekt {
-  return prosjektDist(side < 0 ? -0.16 : 1.16, dist, tid);
+export function prosjektDekor(side: -1 | 1, dist: number, tid: number, etappe = 1): Prosjekt {
+  return prosjektDist(side < 0 ? -0.16 : 1.16, dist, tid, true, etappe);
 }
 
 export function turFramgang(tid: number, etappe = 1, antallStopp = 6): number {
@@ -99,11 +104,20 @@ export function turFramgang(tid: number, etappe = 1, antallStopp = 6): number {
   return klem((etappe - 1 + iEtappe) / Math.max(1, antallStopp));
 }
 
+export function skoleZ(tid: number, etappe = 1, antallStopp = 6): number {
+  const fram = turFramgang(tid, etappe, antallStopp);
+  const t = fram ** 1.05;
+  return veiEndeZ() + (0.84 - veiEndeZ()) * t;
+}
+
+export function bakomSkole(z: number, tid: number, etappe = 1, antallStopp = 6): boolean {
+  return z < skoleZ(tid, etappe, antallStopp) - 0.015;
+}
+
 export function skolePunkt(tid: number, etappe = 1, antallStopp = 6): Prosjekt {
   const fram = turFramgang(tid, etappe, antallStopp);
   const t = fram ** 1.05;
-  const z = veiEndeZ() + (0.84 - veiEndeZ()) * t;
-  const vei = veiPunkt(z, tid);
+  const vei = veiPunkt(skoleZ(tid, etappe, antallStopp), tid);
   return {
     left: vei.cx,
     top: vei.cy,

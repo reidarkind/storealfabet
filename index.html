@@ -34,7 +34,7 @@
       </section>
 
       <section id="skjerm-innstillinger" class="skjerm" hidden>
-        <button type="button" data-tilbake class="tekst tilbake-topp">Tilbake</button>
+        <button type="button" data-tilbake class="mini tilbake-topp">Tilbake</button>
         <h1>Innstillinger</h1>
         <p>Velg nivå for hele turen til skolen.</p>
         <div class="nivaa-grid">
@@ -65,15 +65,15 @@
       </section>
 
       <section id="skjerm-rekord" class="skjerm" hidden>
+        <button type="button" data-tilbake class="mini tilbake-topp">Tilbake</button>
         <h1>Rekord</h1>
         <p id="rekord-status" class="rekord">Ingen tur ennå. Alf venter!</p>
         <ol id="rekord-tavle" class="rekord-tavle"></ol>
         <p>De ti beste turene på denne telefonen. Bytt du nettleser eller sletter siden, er rekorden borte. Ingenting sendes vekk.</p>
-        <button type="button" data-tilbake class="tekst">Tilbake</button>
       </section>
 
       <section id="skjerm-om" class="skjerm" hidden>
-        <button type="button" data-tilbake class="tekst tilbake-topp">Tilbake</button>
+        <button type="button" data-tilbake class="mini tilbake-topp">Tilbake</button>
         <h1>Om appen</h1>
         <p>Alf er en hund som har forsovet seg. Han må rekke skolen for å kjøpe skolemelk. Langs veien øver dere på bokstaver, lyder, rim og små ord — slik 1. og 2. klasse gjør på skolen.</p>
         <p>Zombiene er tullete bokstavtyver. De er litt spennende, aldri skumle. Hvis du taper en duell, mister Alf noen steiner, men han kommer alltid frem.</p>
@@ -86,6 +86,7 @@
       </section>
 
       <section id="skjerm-installer" class="skjerm" hidden>
+        <button type="button" data-tilbake class="mini tilbake-topp">Tilbake</button>
         <h1>StoreAlfabet</h1>
         <h2>Hva dette er</h2>
         <p>StoreAlfabet er et bokstavspill for 1. og 2. klasse. Du hjelper hunden Alf til skolen, samler krystaller og diamanter, og øver på bokstaver langs veien.</p>
@@ -115,7 +116,6 @@
           <a class="sekundaer" data-apps href="https://reidarkind.github.io/myapps/" target="_blank" rel="noopener noreferrer">Andre apper jeg har laget</a>
           <a class="sekundaer" data-coffee href="https://buymeacoffee.com/reidarkind" target="_blank" rel="noopener noreferrer"><span class="btn-ico" aria-hidden="true">☕</span>Spander en kaffe</a>
         </nav>
-        <button type="button" data-tilbake class="tekst">Tilbake</button>
       </section>
 
       <section id="skjerm-spill" class="skjerm spill" hidden>
@@ -139,6 +139,7 @@
         <div id="sti-spill" hidden>
           <canvas id="sti-lerret" aria-hidden="true"></canvas>
           <div id="sti-skole-wrap">
+            <div id="sti-skole-skjul" aria-hidden="true"></div>
             <img id="sti-skole" alt="Skolen" />
             <span id="sti-skole-skilt">Skolen</span>
           </div>
@@ -241,7 +242,7 @@
           <h2 id="melk-tittel">Vanlig skolemelk</h2>
           <p id="melk-tekst"></p>
           <button type="button" id="ny-tur" class="hoved">En tur til</button>
-          <button type="button" data-tilbake class="tekst">Til menyen</button>
+          <button type="button" data-tilbake class="mini">Til menyen</button>
         </article>
       </section>
     </div>

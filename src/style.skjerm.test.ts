@@ -18,6 +18,23 @@ describe("skjerm-synlighet", () => {
     expect(css).toMatch(/\.spill\.tegn-modus\s+\.tegn-knapper\s*\{[^}]*flex:\s*0\s+0\s+auto/);
   });
 
+  it("dekker veien bak skolen", () => {
+    const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
+    expect(css).toMatch(/#sti-skole-skjul\s*\{[^}]*position:\s*absolute/);
+    expect(css).toMatch(/#sti-skole-wrap\s*\{[^}]*z-index:\s*8/);
+  });
+
+  it("har store ABC-klosser, zombie og steiner i app-ikonet", () => {
+    const svg = readFileSync(new URL("../public/ikon.svg", import.meta.url), "utf8");
+    expect(svg).toContain(">A</text>");
+    expect(svg).toContain(">B</text>");
+    expect(svg).toContain(">C</text>");
+    expect(svg).toMatch(/width="118"/);
+    expect(svg).toContain("#7c9a5c");
+    expect(svg).toContain("#2ec4b6");
+    expect(svg).toContain("#d9f4ff");
+  });
+
   it("dekker veien med startskjerm under 3-2-1", () => {
     const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
     expect(css).toMatch(/#sti-start\s*\{[^}]*position:\s*absolute/);

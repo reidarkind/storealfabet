@@ -94,7 +94,6 @@ body {
 
 .tilbake-topp {
   align-self: flex-start;
-  padding: 0.2rem 0;
   margin: 0;
 }
 
@@ -347,7 +346,7 @@ button {
   position: absolute;
   top: 22%;
   left: 50%;
-  z-index: 2;
+  z-index: 8;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -355,6 +354,18 @@ button {
   transform-origin: center bottom;
   pointer-events: none;
   filter: drop-shadow(0 4px 0 #2a184055);
+}
+
+#sti-skole-skjul {
+  position: absolute;
+  left: 50%;
+  bottom: -0.35rem;
+  width: 240%;
+  height: 78%;
+  transform: translateX(-50%);
+  border-radius: 46% 46% 28% 28%;
+  background: linear-gradient(#8a4034 0 34%, #4a8f44 34% 100%);
+  z-index: -1;
 }
 
 #sti-skole-wrap[hidden] {
@@ -585,8 +596,8 @@ button {
 }
 
 .sti-ting.baesj {
-  width: 2.2rem;
-  height: 1.6rem;
+  width: 1.55rem;
+  height: 1.15rem;
 }
 
 .sti-ting.hus {

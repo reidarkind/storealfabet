@@ -110,6 +110,19 @@ describe("sti", () => {
     expect(hendelser[0]?.tekst).toMatch(/bæsj/i);
   });
 
+  it("treffer ikke bæsj når Alf bare er i nærheten", () => {
+    const t = settX(
+      {
+        ...startSti(),
+        objekter: [nær(0.62, "baesj")],
+      },
+      0.5,
+    );
+    const { tilstand, hendelser } = stiTick(t, 0.01, () => 0.99);
+    expect(tilstand.baesj).toBe(0);
+    expect(hendelser).toEqual([]);
+  });
+
   it("advarer mot hundebæsj med ulike tekster", () => {
     const tekster = new Set([0, 0.2, 0.4, 0.6, 0.8].map((n) => baesjHint(() => n)));
     expect(tekster.has("Ikke ta på hundebæsj!")).toBe(true);

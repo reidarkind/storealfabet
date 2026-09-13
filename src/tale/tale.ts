@@ -139,7 +139,7 @@ const UTTALE: [RegExp, string][] = [
 
 export function forberedUttale(tekst: string): string {
   const enLyd = tekst.replace(/([a-zæøå])\1{2,}/gi, "$1");
-  const medPause = enLyd.replace(/«([^»]+)»/g, " ... $1 ... ");
+  const medPause = enLyd.replace(/«([^»]+)»/g, " – $1 – ");
   return UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), medPause);
 }
 

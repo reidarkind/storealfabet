@@ -28,7 +28,7 @@ import {
   startTur,
   turKanFortsette,
 } from "./spill/tur";
-import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, turFramgang, veiAvstand, veiEndeZ, veiPunkt, zFraDist } from "./spill/perspektiv";
+import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, skoleZ, turFramgang, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { SvarVakt } from "./spill/svar-vakt";
 import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
@@ -881,7 +881,8 @@ function tegnVeiLerret(tilstand: StiTilstand): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const hor = veiPunkt(veiEndeZ(), tilstand.tid);
+  const etappe = tur?.stopp ?? 1;
+  const hor = veiPunkt(skoleZ(tilstand.tid, etappe), tilstand.tid);
   const hy = (hor.cy / 100) * h;
   const himmel = ctx.createLinearGradient(0, 0, 0, Math.max(8, hy));
   himmel.addColorStop(0, "#7eb6d9");
@@ -897,7 +898,7 @@ function tegnVeiLerret(tilstand: StiTilstand): void {
   ctx.fillRect(0, hy, w, Math.max(1, h - hy));
   const n = 58;
   const fase = veiAvstand(tilstand.tid);
-  const ende = veiEndeZ();
+  const ende = skoleZ(tilstand.tid, etappe);
   for (let i = 0; i < n; i++) {
     const z0 = ende + (i / n) * (1 - ende);
     const z1 = ende + ((i + 1) / n) * (1 - ende);
@@ -975,7 +976,7 @@ function tegnSti(tilstand: StiTilstand): void {
   const lag = $("sti-lag");
   const levende = new Set<string>();
   for (const objekt of tilstand.dekor) {
-    const p = prosjektDekor(objekt.side, objekt.dist, tilstand.tid);
+    const p = prosjektDekor(objekt.side, objekt.dist, tilstand.tid, tur?.stopp ?? 1);
     oppdaterStiTing(
       lag,
       `sti-dekor-${objekt.id}`,
@@ -991,7 +992,7 @@ function tegnSti(tilstand: StiTilstand): void {
     );
   }
   for (const objekt of tilstand.objekter) {
-    const p = prosjektDist(objekt.x, objekt.dist, tilstand.tid, false);
+    const p = prosjektDist(objekt.x, objekt.dist, tilstand.tid, false, tur?.stopp ?? 1);
     const fil =
       objekt.type === "syklist" || objekt.type === "bil"
         ? trafikkBilde(objekt.type, objekt.retning ?? "mot")

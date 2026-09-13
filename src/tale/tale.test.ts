@@ -84,10 +84,10 @@ describe("stemmevalg", () => {
     expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).not.toMatch(/lll|eee|rrr/i);
   });
 
-  it("tar en tenkepause før det siterte ordet", () => {
+  it("tar en tenkepause og trykk rundt det siterte ordet", () => {
     const ut = forberedUttale("Hvilken bokstav slutter «de» på?");
-    expect(ut).toMatch(/slutter\s+\.{3}\s+de\s+\.{3}\s+på/);
+    expect(ut).toMatch(/slutter\s+–\s+de\s+–\s+på/);
     expect(ut).not.toContain("«");
-    expect(lesOppgave({ prompt: "Hvilken bokstav slutter «de» på?", tale: "de" })).toMatch(/\.{3}\s+de/);
+    expect(lesOppgave({ prompt: "Hvilken bokstav slutter «de» på?", tale: "de" })).toMatch(/–\s+de\s+–/);
   });
 });

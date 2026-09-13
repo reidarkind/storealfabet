@@ -2,6 +2,7 @@ import { distFraZ, prosjektPunkt, veiEndeZ, veiPunkt, zFraDist } from "./perspek
 
 export const STI_SEKUNDER = 40;
 export const PLUKK_AVSTAND = 0.18;
+export const BAESJ_AVSTAND = 0.07;
 export const ZOMBIE_AVSTAND = 0.13;
 export const MAX_ZOMBIE_PER_STI = 1;
 export const MAX_BAESJ_PER_STI = 2;
@@ -256,7 +257,8 @@ function nyTrafikk(id: number, type: TrafikkType, tid: number, tilfeldig: () => 
 }
 
 function treffer(alfX: number, objekt: StiObjekt): boolean {
-  const avstand = objekt.type === "zombie" ? ZOMBIE_AVSTAND : PLUKK_AVSTAND;
+  const avstand =
+    objekt.type === "zombie" ? ZOMBIE_AVSTAND : objekt.type === "baesj" ? BAESJ_AVSTAND : PLUKK_AVSTAND;
   return Math.abs(alfX - objekt.x) <= avstand;
 }
 
