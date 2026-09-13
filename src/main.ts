@@ -44,10 +44,12 @@ function vis(id: string): void {
 
 function oppdaterMeny(): void {
   const lagret = lesLagring();
-  $("rekord").textContent =
+  const tekst =
     lagret.besteVerdi > 0
       ? `Beste tur: ${lagret.besteVerdi} poeng · ${MELK_NAVN[lagret.finesteMelk]}`
       : "Ingen tur ennå. Alf venter!";
+  $("rekord").textContent = tekst;
+  $("rekord-status").textContent = tekst;
   $("nivaa-vis").textContent = NIVAA_NAVN[lagret.innstillinger.nivaa];
 }
 
@@ -58,6 +60,10 @@ function bindMeny(): void {
     markerNivaa();
     $("lyd-pa").setAttribute("aria-pressed", String(innstillinger.lydPa));
     $("lyd-pa").textContent = innstillinger.lydPa ? "Lyd er på" : "Lyd er av";
+  });
+  $("knapp-rekord").addEventListener("click", () => {
+    oppdaterMeny();
+    vis("skjerm-rekord");
   });
   $("knapp-om").addEventListener("click", () => vis("skjerm-om"));
   document.querySelectorAll<HTMLButtonElement>("[data-tilbake]").forEach((knapp) => {
