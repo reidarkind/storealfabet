@@ -83,7 +83,6 @@ body {
 }
 
 .skjerm.spill.paa-sti .verden-wrap,
-.skjerm.spill.paa-sti #hint-linje,
 .skjerm.spill.paa-sti #oppgave-kort,
 .skjerm.spill.paa-sti #melkebod {
   display: none;
@@ -847,23 +846,27 @@ button {
 
 
 .hint {
-  min-height: 2.6rem;
-  margin: 0 1rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 0.8rem;
-  background: #2a225099;
+  position: absolute;
+  left: 0.55rem;
+  right: 0.55rem;
+  top: 0.55rem;
+  z-index: 6;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 1rem;
+  background: #1b1633f5;
+  border: 2px solid #f4d27a99;
+  box-shadow: 0 10px 24px #0008;
+  text-align: center;
+  pointer-events: none;
 }
 
 .hint:empty {
   display: none;
 }
 
-.spill.tegn-modus .hint {
-  min-height: 0;
-  margin-bottom: 0.15rem;
-}
-
 .kort {
+  position: relative;
   margin: 0 0.8rem;
   background: linear-gradient(180deg, #3a2c68, #241a42);
   border: 3px solid #f4d27a66;
