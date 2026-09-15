@@ -48,10 +48,27 @@
           <button type="button" data-sekk="blomst">Blomst</button>
         </div>
         <button type="button" id="lyd-pa" class="sekundaer" aria-pressed="true">Lyd er på</button>
-        <p>Stemme</p>
-        <div id="stemme-valg" class="nivaa-grid stemme-grid" role="radiogroup" aria-label="Velg stemme"></div>
+        <label class="stemme-etikett" id="stemme-etikett" for="stemme-valg">Stemme nettleseren kan bruke</label>
+        <div class="stemme-rad">
+          <select id="stemme-valg" class="stemme-liste" aria-labelledby="stemme-etikett"></select>
+          <button type="button" id="stemme-hjelp-apne" class="hjelp-ikon" aria-haspopup="dialog" aria-controls="stemme-hjelp-dialog" aria-label="Hjelp til stemmevalg">?</button>
+        </div>
         <p id="stemme-status" class="stemme-status" hidden></p>
-        <p class="stemme-hjelp">Alfs stemme lastes ned første gang. Telefonens stemme er den norske opplesingsstemmen i Safari (på iPhone ofte Nora). Det er ikke Siri-stemmen. På iPhone: Innstillinger → Tilgjengelighet → Opplest innhold (på nyeste iOS: Les og snakk) → Stemmer → Norsk (bokmål). Last ned en forbedret stemme hvis du ser en sky.</p>
+        <dialog id="stemme-hjelp-dialog" class="hjelp-dialog" aria-labelledby="stemme-hjelp-tittel">
+          <h2 id="stemme-hjelp-tittel" tabindex="-1">Slik finner du stemmer</h2>
+          <div class="stemme-hjelp">
+            <p>Listen viser det nettleseren faktisk kan. Alfs stemme lastes ned første gang og virker uten stegene under.</p>
+            <p>
+              <strong>iPhone</strong>
+              Åpne appen Innstillinger (Settings) → Tilgjengelighet (Accessibility) → Opplest innhold eller Les og snakk (Spoken Content / Read &amp; Speak) → Stemmer (Voices) → Norsk bokmål (Norwegian Bokmål). Last ned Nora eller Henrik, gjerne Forbedret (Enhanced). Navnet kommer bare i listen over hvis Safari får den — ofte gjør den ikke det.
+            </p>
+            <p>
+              <strong>Android</strong>
+              Åpne appen Innstillinger (Settings) → Tilgjengelighet (Accessibility) → Tekst-til-tale (Text-to-speech). På noen telefoner: System → Språk og inndata (Languages &amp; input) → Tekst-til-tale. Velg Google tekst-til-tale (Google Text-to-speech) → installer stemmedata (Install voice data) → Norsk (Norwegian). Åpne Innstillinger i denne appen på nytt etterpå.
+            </p>
+          </div>
+          <button type="button" id="stemme-hjelp-lukk" class="hoved">Lukk</button>
+        </dialog>
         <button type="button" id="prov-stemme" class="sekundaer">Prøv stemmen</button>
         <p>Etter første åpning kan du spille uten nett. Nye versjoner hentes bare når du sjekker.</p>
         <button type="button" id="sjekk-oppdatering" class="sekundaer">Sjekk for oppdateringer</button>

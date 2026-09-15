@@ -12,6 +12,10 @@ import {
   skalListesSomStemmevalg,
   velgBesteStemme,
   velgTaleModus,
+  forklarSystemstemme,
+  erDorligSystemstemme,
+  stemmeValgFraListe,
+  valgtStemmeIListe,
 } from "./tale";
 import { ALLE_OPPGAVER } from "../oppgaver/data";
 
@@ -55,18 +59,40 @@ describe("stemmevalg", () => {
     expect(migrerStemme("Nora (Enhanced)")).toBe("auto");
     expect(migrerStemme("Google norsk")).toBe("Google norsk");
     expect(velgTaleModus("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }])).toBe(
-      "system",
+      "alf",
     );
+    expect(velgTaleModus("auto", [{ name: "Nora", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.Nora" }])).toBe("alf");
+    expect(velgTaleModus("auto", [])).toBe("alf");
     expect(velgTaleModus("auto", [{ name: "Microsoft Nora Compact", lang: "nb-NO" }])).toBe("alf");
     expect(velgTaleModus("alf", [{ name: "Nora (Enhanced)", lang: "nb-NO" }])).toBe("alf");
     expect(skalBrukeNettleserTale("alf", [{ name: "Nora (Enhanced)", lang: "nb-NO" }])).toBe(false);
     expect(skalBrukeNettleserTale("auto", [{ name: "Microsoft Nora Compact", lang: "nb-NO" }])).toBe(false);
     expect(
-      skalBrukeNettleserTale("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }]),
+      skalBrukeNettleserTale("auto", [{ name: "Henrik (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.enhanced.nb-NO.Henrik" }]),
     ).toBe(true);
+    expect(
+      velgBesteStemme([
+        { name: "Nora", lang: "nb-NO", voiceURI: "com.apple.speech.synthesis.voice.Nora" },
+        { name: "Henrik (Enhanced)", lang: "", voiceURI: "com.apple.voice.enhanced.nb-NO.Henrik" },
+      ])?.name,
+    ).toBe("Henrik (Enhanced)");
+    expect(erDorligSystemstemme({ name: "Nora", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.Nora" })).toBe(true);
+    expect(forklarSystemstemme("auto", [{ name: "Nora", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.Nora" }])).toMatch(
+      /Alf snakker i stedet/,
+    );
     expect(skalListesSomStemmevalg("Nora (Enhanced)", "nb-NO")).toBe(false);
     expect(skalListesSomStemmevalg("Microsoft Nora Compact", "nb-NO")).toBe(false);
     expect(skalListesSomStemmevalg("Henrik", "nb-NO")).toBe(true);
+    expect(skalListesSomStemmevalg("Henrik (Enhanced)", "nb-NO")).toBe(true);
+    expect(
+      stemmeValgFraListe([
+        { name: "Nora", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.Nora" },
+        { name: "Henrik (Enhanced)", lang: "nb-NO" },
+        { name: "Google US English", lang: "en-US" },
+      ]).map((v) => v.id),
+    ).toEqual(["alf", "Henrik (Enhanced)", "Nora"]);
+    expect(valgtStemmeIListe("auto", [{ id: "alf" }, { id: "Nora" }])).toBe("alf");
+    expect(valgtStemmeIListe("Nora", [{ id: "alf" }, { id: "Nora" }])).toBe("Nora");
   });
 
   it("gir korte veilyder i stedet for prat", () => {

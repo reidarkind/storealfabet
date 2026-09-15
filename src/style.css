@@ -159,6 +159,18 @@ body {
   line-height: 1.4;
 }
 
+.stemme-hjelp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.stemme-hjelp strong {
+  display: block;
+  color: var(--gull);
+  margin-bottom: 0.2rem;
+}
+
 .stemme-status {
   margin: 0;
   color: var(--gull);
@@ -168,14 +180,74 @@ body {
   display: none;
 }
 
-.stemme-grid {
-  grid-template-columns: 1fr;
+.stemme-etikett {
+  font-weight: 800;
 }
 
-.stemme-grid button {
+.stemme-rad {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.stemme-liste {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
   min-height: 3.4rem;
-  font-size: 1.15rem;
-  text-align: center;
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 1.1rem;
+  border: 2px solid #f4d27a55;
+  background: #3d2a6e;
+  color: var(--krem);
+  cursor: pointer;
+}
+
+.hjelp-ikon {
+  flex: 0 0 3.4rem;
+  width: 3.4rem;
+  min-height: 3.4rem;
+  padding: 0;
+  border-radius: 1.1rem;
+  background: #3d2a6e;
+  color: var(--gull);
+  border: 2px solid #f4d27a55;
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.hjelp-dialog {
+  width: min(28rem, calc(100vw - 1.6rem));
+  max-height: min(80dvh, 36rem);
+  overflow: auto;
+  margin: auto;
+  padding: 1.1rem 1.1rem 1.2rem;
+  border: 2px solid #f4d27a66;
+  border-radius: 1.2rem;
+  background: #2a2250;
+  color: var(--krem);
+  box-shadow: 0 16px 40px #0008;
+}
+
+.hjelp-dialog::backdrop {
+  background: #1b1633cc;
+}
+
+.hjelp-dialog h2 {
+  font-size: 1.3rem;
+  outline: none;
+}
+
+.hjelp-dialog .stemme-hjelp {
+  margin: 0.7rem 0 1rem;
+}
+
+.hjelp-dialog .hoved {
+  width: 100%;
 }
 
 h1,

@@ -47,21 +47,39 @@ export function stemmeRang(navn: string, lang = "", voiceURI = ""): number {
   if (l.startsWith("nn")) rang -= 18;
   if (/google|apple|siri|samsung|ttsbundle/.test(n)) rang += 55;
   if (/neural|natural|online|enhanced|premium/.test(n)) rang += 30;
-  if (/henrik|oskar|erik|magnus|anders|finn|pernille|male|mann/.test(n)) rang += 20;
+  if (/henrik/.test(n)) rang += 45;
+  if (/oskar|erik|magnus|anders|finn|pernille|male|mann/.test(n)) rang += 20;
   if (/microsoft/.test(n) && !/neural|natural|online/.test(n)) rang -= 20;
   if (/compact|eloquence|espeak|robot|desktop|hedda/.test(n)) rang -= 35;
+  if (/nora/.test(n) && !/enhanced|premium|neural|natural/.test(n)) rang -= 30;
   if (/nora|female|kvinne|dame/.test(n) && !/enhanced|premium|neural|natural|siri/.test(n)) rang -= 5;
   return rang;
 }
 
 type StemmeTreff = { name: string; lang: string; voiceURI?: string };
 
+function erNorskTreff(stemme: StemmeTreff): boolean {
+  return (
+    erNorskLang(stemme.lang) ||
+    /norsk|norwegian|bokmål|bokmal|henrik|nora/i.test(`${stemme.name} ${stemme.voiceURI ?? ""}`)
+  );
+}
+
+export function erDorligSystemstemme(stemme: StemmeTreff): boolean {
+  const tekst = `${stemme.name} ${stemme.voiceURI ?? ""}`.toLowerCase();
+  if (/eloquence|espeak|robot|hedda/.test(tekst)) return true;
+  if (/microsoft/.test(tekst) && /compact/.test(tekst) && !/neural|natural|online/.test(tekst)) return true;
+  if (!/nora/.test(tekst)) return false;
+  if (/compact/.test(tekst)) return true;
+  return !/enhanced|premium|neural|natural/.test(tekst);
+}
+
 export function velgBesteStemme<T extends StemmeTreff>(stemmer: T[], onsket = ""): T | undefined {
   if (onsket && onsket !== AUTO_STEMME && onsket !== ALF_STEMME) {
     const treff = stemmer.find((s) => s.name === onsket || s.voiceURI === onsket);
     if (treff) return treff;
   }
-  const norsk = stemmer.filter((s) => erNorskLang(s.lang));
+  const norsk = stemmer.filter((s) => erNorskTreff(s));
   const liste = norsk.length > 0 ? norsk : stemmer;
   return [...liste].sort(
     (a, b) =>
@@ -71,28 +89,64 @@ export function velgBesteStemme<T extends StemmeTreff>(stemmer: T[], onsket = ""
 }
 
 function stemmeErGodNok(stemme: StemmeTreff): boolean {
+  if (erDorligSystemstemme(stemme)) return false;
   const tekst = `${stemme.name} ${stemme.voiceURI ?? ""}`.toLowerCase();
-  if (/siri|apple|google|samsung|neural|natural|online|enhanced|premium|ttsbundle/.test(tekst)) {
-    return true;
-  }
+  if (/henrik/.test(tekst)) return true;
+  if (/google|samsung|neural|natural|online|enhanced|premium/.test(tekst)) return true;
+  if (/siri|apple|ttsbundle/.test(tekst) && !/compact/.test(tekst) && !/nora/.test(tekst)) return true;
   if (/microsoft/.test(tekst) && /compact|eloquence|hedda/.test(tekst) && !/neural|natural|online/.test(tekst)) {
     return false;
   }
-  if (/compact|eloquence|espeak|robot/.test(tekst) && !/siri|apple/.test(tekst)) return false;
+  if (/compact|eloquence|espeak|robot/.test(tekst)) return false;
   return erNorskLang(stemme.lang) || stemmeRang(stemme.name, stemme.lang, stemme.voiceURI ?? "") >= 20;
 }
 
 export function velgTaleModus(onsket: string, stemmer: StemmeTreff[]): TaleModus {
   if (onsket === ALF_STEMME) return "alf";
   if (onsket && onsket !== AUTO_STEMME) return "system";
-  if (stemmer.length === 0) return "system";
+  if (stemmer.length === 0) return "alf";
   const beste = velgBesteStemme(stemmer);
   return beste && stemmeErGodNok(beste) ? "system" : "alf";
+}
+
+export function forklarSystemstemme(onsket: string, stemmer: StemmeTreff[]): string {
+  if (onsket === ALF_STEMME || onsket === "") return "";
+  if (velgTaleModus(onsket, stemmer) === "alf") {
+    return "Nettleseren kan ikke bruke stemmen fra telefonens innstillinger. Den har bare Nora, så Alf snakker i stedet.";
+  }
+  const stemme = velgBesteStemme(stemmer, onsket === AUTO_STEMME ? "" : onsket);
+  return stemme ? `Bruker ${stemme.name}.` : "";
 }
 
 export function skalListesSomStemmevalg(navn: string, lang = "", voiceURI = ""): boolean {
   if (/nora|hedda/i.test(`${navn} ${voiceURI}`)) return false;
   return stemmeErGodNok({ name: navn, lang, voiceURI });
+}
+
+export type StemmeValg = { id: string; tekst: string; gruppe: "alf" | "telefon" };
+
+export function stemmeValgFraListe(stemmer: StemmeTreff[]): StemmeValg[] {
+  const sett = new Map<string, StemmeTreff>();
+  for (const stemme of stemmer.filter((s) => erNorskTreff(s))) {
+    if (!sett.has(stemme.name)) sett.set(stemme.name, stemme);
+  }
+  const telefon: StemmeValg[] = [...sett.values()]
+    .sort(
+      (a, b) =>
+        stemmeRang(b.name, b.lang, b.voiceURI ?? "") - stemmeRang(a.name, a.lang, a.voiceURI ?? "") ||
+        a.name.localeCompare(b.name, "nb"),
+    )
+    .map((s) => ({
+      id: s.name,
+      tekst: s.lang ? `${s.name} · ${s.lang}` : s.name,
+      gruppe: "telefon",
+    }));
+  return [{ id: ALF_STEMME, tekst: "Alfs stemme (anbefalt)", gruppe: "alf" }, ...telefon];
+}
+
+export function valgtStemmeIListe(lagret: string, valg: { id: string }[]): string {
+  if (valg.some((v) => v.id === lagret)) return lagret;
+  return ALF_STEMME;
 }
 
 export function skalBrukeNettleserTale(onsket: string, stemmer: StemmeTreff[]): boolean {
@@ -117,16 +171,29 @@ function brukerAlfNa(): boolean {
 export function norskeStemmer(): SpeechSynthesisVoice[] {
   if (!harTale()) return [];
   const alle = speechSynthesis.getVoices();
-  const norsk = alle.filter(
-    (s) =>
-      erNorskLang(s.lang) ||
-      /norsk|norwegian|bokmål|bokmal|henrik|nora|siri/i.test(`${s.name} ${s.voiceURI}`),
-  );
+  const norsk = alle.filter((s) => erNorskTreff(s));
   return (norsk.length > 0 ? norsk : alle).sort(
     (a, b) =>
       stemmeRang(b.name, b.lang, b.voiceURI) - stemmeRang(a.name, a.lang, a.voiceURI) ||
       a.name.localeCompare(b.name, "nb"),
   );
+}
+
+function ventPaStemmer(maksMs = 1200): Promise<SpeechSynthesisVoice[]> {
+  if (!harTale()) return Promise.resolve([]);
+  const na = speechSynthesis.getVoices();
+  if (na.length > 0) return Promise.resolve(na);
+  return new Promise((resolve) => {
+    let ferdig = false;
+    const slutt = () => {
+      if (ferdig) return;
+      ferdig = true;
+      speechSynthesis.removeEventListener("voiceschanged", slutt);
+      resolve(speechSynthesis.getVoices());
+    };
+    speechSynthesis.addEventListener("voiceschanged", slutt);
+    window.setTimeout(slutt, maksMs);
+  });
 }
 
 const UTTALE: [RegExp, string][] = [
@@ -246,9 +313,9 @@ export function stemmeEtikett(navn: string): string {
   return navn;
 }
 
-function finnStemme(): SpeechSynthesisVoice | undefined {
+function finnStemme(stemmer?: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
   const onsket = valgtStemmeNavn === AUTO_STEMME || valgtStemmeNavn === ALF_STEMME ? "" : valgtStemmeNavn;
-  return velgBesteStemme(harTale() ? speechSynthesis.getVoices() : [], onsket);
+  return velgBesteStemme(stemmer ?? (harTale() ? speechSynthesis.getVoices() : []), onsket);
 }
 
 function taleKontekst(): AudioContext | null {
@@ -277,7 +344,7 @@ export function aktiverLyd(): void {
   taleKlar = true;
 }
 
-function siMedNettleser(tekst: string): void {
+function siMedNettleser(tekst: string, stemmer: SpeechSynthesisVoice[]): void {
   if (!harTale()) return;
   speechSynthesis.cancel();
   const deler = forberedTaleDeler(tekst);
@@ -286,7 +353,7 @@ function siMedNettleser(tekst: string): void {
     const ytring = new SpeechSynthesisUtterance(deler[i]);
     ytring.lang = "nb-NO";
     ytring.pitch = 1;
-    const stemme = finnStemme();
+    const stemme = finnStemme(stemmer);
     if (stemme) {
       ytring.voice = stemme;
       ytring.lang = stemme.lang.startsWith("nb") || stemme.lang.startsWith("no") ? stemme.lang : "nb-NO";
@@ -306,11 +373,21 @@ export function si(tekst: string, lydPa: boolean): void {
   if (!lydPa || !tekst.trim()) return;
   if (!taleKlar) aktiverLyd();
   stoppTale();
-  if (brukerAlfNa()) {
-    void spillAlfUtenNora(forberedTaleDeler(tekst));
+  void spillTale(tekst);
+}
+
+async function spillTale(tekst: string): Promise<void> {
+  const deler = forberedTaleDeler(tekst);
+  if (valgtStemmeNavn === ALF_STEMME) {
+    await spillAlfUtenNora(deler);
     return;
   }
-  siMedNettleser(tekst);
+  const stemmer = harTale() ? await ventPaStemmer() : [];
+  if (!skalBrukeNettleserTale(valgtStemmeNavn, stemmer)) {
+    await spillAlfUtenNora(deler);
+    return;
+  }
+  siMedNettleser(tekst, stemmer);
 }
 
 async function spillAlfUtenNora(deler: string[]): Promise<void> {

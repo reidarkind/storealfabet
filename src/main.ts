@@ -34,12 +34,13 @@ import { SvarVakt } from "./spill/svar-vakt";
 import { alfErKlar, lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
 import {
   ALF_STEMME,
-  AUTO_STEMME,
   aktiverLyd,
   kanSnakke,
   lesOppgave,
   norskeStemmer,
-  skalListesSomStemmevalg,
+  forklarSystemstemme,
+  stemmeValgFraListe,
+  valgtStemmeIListe,
   settStemme,
   si,
   spillKling,
@@ -136,17 +137,30 @@ function bindMeny(): void {
       markerSekk();
     });
   });
-  $("stemme-valg").addEventListener("click", (e) => {
-    const knapp = (e.target as HTMLElement).closest("[data-stemme]");
-    if (!(knapp instanceof HTMLButtonElement)) return;
-    innstillinger = { ...innstillinger, stemme: knapp.dataset.stemme || ALF_STEMME };
+  $("stemme-valg").addEventListener("change", () => {
+    const felt = $("stemme-valg") as HTMLSelectElement;
+    innstillinger = { ...innstillinger, stemme: felt.value || ALF_STEMME };
     settStemme(innstillinger.stemme);
     persist();
-    markerStemme();
+    visSystemstemmeForklaring();
     if (innstillinger.stemme === ALF_STEMME) void lastAlfStemme();
+  });
+  const stemmeHjelp = $("stemme-hjelp-dialog") as HTMLDialogElement;
+  $("stemme-hjelp-apne").addEventListener("click", () => {
+    if (typeof stemmeHjelp.showModal === "function") stemmeHjelp.showModal();
+    else stemmeHjelp.setAttribute("open", "");
+    $("stemme-hjelp-tittel").focus();
+  });
+  $("stemme-hjelp-lukk").addEventListener("click", () => {
+    if (typeof stemmeHjelp.close === "function") stemmeHjelp.close();
+    else stemmeHjelp.removeAttribute("open");
+  });
+  stemmeHjelp.addEventListener("click", (e) => {
+    if (e.target === stemmeHjelp) stemmeHjelp.close();
   });
   $("prov-stemme").addEventListener("click", () => {
     aktiverLyd();
+    visSystemstemmeForklaring();
     si("Hei, jeg er Alf. Vi skal rekke skolen.", true);
   });
   $("nullstill-rekord").addEventListener("click", () => {
@@ -235,34 +249,32 @@ function markerSekk(): void {
 }
 
 function fyllStemmer(): void {
-  const felt = $("stemme-valg");
+  const felt = $("stemme-valg") as HTMLSelectElement;
+  const valg = stemmeValgFraListe(norskeStemmer());
   felt.innerHTML = "";
-  const knapper: { id: string; tekst: string }[] = [
-    { id: ALF_STEMME, tekst: "Alfs stemme (anbefalt)" },
-    { id: AUTO_STEMME, tekst: "Telefonens stemme" },
-  ];
-  for (const stemme of norskeStemmer()) {
-    if (!skalListesSomStemmevalg(stemme.name, stemme.lang, stemme.voiceURI)) continue;
-    knapper.push({ id: stemme.name, tekst: stemme.name });
+  const alf = document.createElement("option");
+  alf.value = ALF_STEMME;
+  alf.textContent = "Alfs stemme (anbefalt)";
+  felt.append(alf);
+  const telefon = valg.filter((rad) => rad.gruppe === "telefon");
+  if (telefon.length === 0) {
+    const tom = document.createElement("option");
+    tom.disabled = true;
+    tom.textContent = "Ingen norske stemmer i nettleseren ennå";
+    felt.append(tom);
+  } else {
+    const gruppe = document.createElement("optgroup");
+    gruppe.label = "På denne telefonen";
+    for (const rad of telefon) {
+      const valgFelt = document.createElement("option");
+      valgFelt.value = rad.id;
+      valgFelt.textContent = rad.tekst;
+      gruppe.append(valgFelt);
+    }
+    felt.append(gruppe);
   }
-  for (const rad of knapper) {
-    const knapp = document.createElement("button");
-    knapp.type = "button";
-    knapp.dataset.stemme = rad.id;
-    knapp.textContent = rad.tekst;
-    felt.append(knapp);
-  }
-  markerStemme();
-}
-
-function markerStemme(): void {
-  const valgt = innstillinger.stemme || ALF_STEMME;
-  document.querySelectorAll<HTMLButtonElement>("#stemme-valg [data-stemme]").forEach((knapp) => {
-    const erValgt = knapp.dataset.stemme === valgt;
-    knapp.classList.toggle("valgt", erValgt);
-    knapp.setAttribute("aria-checked", String(erValgt));
-    knapp.setAttribute("role", "radio");
-  });
+  felt.value = valgtStemmeIListe(innstillinger.stemme, valg);
+  visSystemstemmeForklaring();
 }
 
 function markerNivaa(): void {
@@ -1292,13 +1304,22 @@ document.addEventListener("pointerdown", () => aktiverLyd(), { capture: true });
 oppdaterMeny();
 vis("skjerm-meny");
 visInstallasjon();
+function visSystemstemmeForklaring(): void {
+  const stemmer = typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
+  const tekst = forklarSystemstemme(innstillinger.stemme, stemmer);
+  const el = $("stemme-status");
+  if (!tekst && el.textContent.startsWith("Alf gjør klar")) return;
+  el.textContent = tekst;
+  el.hidden = !tekst;
+}
+
 function visStemmeStatus(status: AlfStemmeStatus): void {
   const tekst =
     status.tilstand === "laster"
       ? `Alf gjør klar stemmen…${status.prosent != null ? ` ${status.prosent} %` : ""}`
       : status.tilstand === "feil"
-        ? "Alf bruker telefonens stemme i stedet."
-        : "";
+        ? "Alf fikk ikke lastet stemmen. Prøv igjen med nett."
+        : forklarSystemstemme(innstillinger.stemme, typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : []);
   for (const id of ["stemme-status", "meny-stemme-status"]) {
     const el = $(id);
     el.textContent = tekst;
