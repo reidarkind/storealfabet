@@ -54,6 +54,7 @@ import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { lerretPunkt } from "./tegning/punkt";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
+import { beVarigLagring } from "./pwa/lagring";
 import { oppdateringTekst, sjekkForOppdatering } from "./pwa/oppdatering";
 
 const TID = 30;
@@ -1300,7 +1301,14 @@ document.addEventListener("visibilitychange", () => {
   }
   fortsettTimer();
 });
-document.addEventListener("pointerdown", () => aktiverLyd(), { capture: true });
+document.addEventListener(
+  "pointerdown",
+  () => {
+    aktiverLyd();
+    void beVarigLagring();
+  },
+  { capture: true },
+);
 oppdaterMeny();
 vis("skjerm-meny");
 visInstallasjon();
@@ -1337,6 +1345,7 @@ function visStemmeStatus(status: AlfStemmeStatus): void {
 settStemme(innstillinger.stemme);
 onAlfStemmeStatus(visStemmeStatus);
 void lastAlfStemme();
+void beVarigLagring();
 if (typeof speechSynthesis !== "undefined") {
   speechSynthesis.getVoices();
   speechSynthesis.addEventListener("voiceschanged", () => {
