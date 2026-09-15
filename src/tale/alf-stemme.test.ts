@@ -1,12 +1,46 @@
-import { describe, expect, it } from "vitest";
-import { medTidsfrist } from "./alf-stemme";
+import { describe, expect, it, vi } from "vitest";
+import { medKjorendeLyd } from "./alf-stemme";
 
-describe("alf-stemme", () => {
-  it("gir opp hvis stemmen bruker for lang tid", async () => {
-    await expect(medTidsfrist(new Promise(() => {}), 20)).rejects.toThrow("tid");
+describe("medKjorendeLyd", () => {
+  it("gir opp uten lydkontekst", async () => {
+    expect(await medKjorendeLyd(() => "x", null)).toBeNull();
   });
 
-  it("lar ferdig jobb gå gjennom", async () => {
-    await expect(medTidsfrist(Promise.resolve("ok"), 200)).resolves.toBe("ok");
+  it("venter på resume før toner planlegges", async () => {
+    const rekkefolge: string[] = [];
+    const ctx = {
+      state: "suspended" as AudioContextState,
+      resume: vi.fn(async () => {
+        rekkefolge.push("resume");
+        ctx.state = "running";
+      }),
+    } as unknown as AudioContext;
+
+    const resultat = await medKjorendeLyd((c) => {
+      rekkefolge.push("spill");
+      expect(c.state).toBe("running");
+      return "ok";
+    }, ctx);
+
+    expect(resultat).toBe("ok");
+    expect(rekkefolge).toEqual(["resume", "spill"]);
+  });
+
+  it("hopper over spill hvis resume feiler", async () => {
+    let spilt = false;
+    const ctx = {
+      state: "suspended" as AudioContextState,
+      resume: vi.fn(async () => {
+        throw new Error("nei");
+      }),
+    } as unknown as AudioContext;
+
+    expect(
+      await medKjorendeLyd(() => {
+        spilt = true;
+        return "x";
+      }, ctx),
+    ).toBeNull();
+    expect(spilt).toBe(false);
   });
 });

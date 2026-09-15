@@ -1,4 +1,4 @@
-import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme, hentLydKontekst } from "./alf-stemme";
+import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme, medKjorendeLyd } from "./alf-stemme";
 
 let taleKlar = false;
 let valgtStemmeNavn = "";
@@ -318,10 +318,6 @@ function finnStemme(stemmer?: SpeechSynthesisVoice[]): SpeechSynthesisVoice | un
   return velgBesteStemme(stemmer ?? (harTale() ? speechSynthesis.getVoices() : []), onsket);
 }
 
-function taleKontekst(): AudioContext | null {
-  return hentLydKontekst();
-}
-
 export function aktiverLyd(): void {
   aktiverAlfLyd();
   if (brukerAlfNa()) {
@@ -432,43 +428,41 @@ function spillTone(
 
 export function spillKling(lydPa: boolean, frekvens = 620): void {
   if (!lydPa) return;
-  const ctx = taleKontekst();
-  if (!ctx) return;
-  void ctx.resume();
-  spillTone(ctx, "sine", frekvens, ctx.currentTime, 0.18, 0.08);
+  void medKjorendeLyd((ctx) => {
+    spillTone(ctx, "sine", frekvens, ctx.currentTime, 0.18, 0.08);
+  });
 }
 
 export function spillStiLyd(lydPa: boolean, type: StiLyd): void {
   if (!lydPa) return;
-  const ctx = taleKontekst();
-  if (!ctx) return;
-  void ctx.resume();
-  const t = ctx.currentTime;
-  if (type === "krystall") {
-    spillTone(ctx, "sine", 980, t, 0.16, 0.09);
-    return;
-  }
-  if (type === "diamant") {
-    spillTone(ctx, "sine", 880, t, 0.1, 0.08);
-    spillTone(ctx, "sine", 1174, t + 0.07, 0.1, 0.08);
-    spillTone(ctx, "sine", 1568, t + 0.14, 0.16, 0.09);
-    return;
-  }
-  if (type === "bil") {
-    spillTone(ctx, "square", 370, t, 0.22, 0.05);
-    spillTone(ctx, "square", 466, t, 0.22, 0.04);
-    return;
-  }
-  if (type === "sykkel") {
-    spillTone(ctx, "triangle", 1760, t, 0.12, 0.07);
-    spillTone(ctx, "triangle", 1480, t + 0.16, 0.14, 0.07);
-    return;
-  }
-  if (type === "baesj") {
-    spillTone(ctx, "sine", 120, t, 0.22, 0.1, 55);
-    spillTone(ctx, "triangle", 80, t + 0.04, 0.18, 0.06, 40);
-    return;
-  }
-  spillTone(ctx, "square", 220, t, 0.08, 0.05);
-  spillTone(ctx, "sine", 140, t + 0.06, 0.16, 0.08, 90);
+  void medKjorendeLyd((ctx) => {
+    const t = ctx.currentTime;
+    if (type === "krystall") {
+      spillTone(ctx, "sine", 980, t, 0.16, 0.09);
+      return;
+    }
+    if (type === "diamant") {
+      spillTone(ctx, "sine", 880, t, 0.1, 0.08);
+      spillTone(ctx, "sine", 1174, t + 0.07, 0.1, 0.08);
+      spillTone(ctx, "sine", 1568, t + 0.14, 0.16, 0.09);
+      return;
+    }
+    if (type === "bil") {
+      spillTone(ctx, "square", 370, t, 0.22, 0.05);
+      spillTone(ctx, "square", 466, t, 0.22, 0.04);
+      return;
+    }
+    if (type === "sykkel") {
+      spillTone(ctx, "triangle", 1760, t, 0.12, 0.07);
+      spillTone(ctx, "triangle", 1480, t + 0.16, 0.14, 0.07);
+      return;
+    }
+    if (type === "baesj") {
+      spillTone(ctx, "sine", 120, t, 0.22, 0.1, 55);
+      spillTone(ctx, "triangle", 80, t + 0.04, 0.18, 0.06, 40);
+      return;
+    }
+    spillTone(ctx, "square", 220, t, 0.08, 0.05);
+    spillTone(ctx, "sine", 140, t + 0.06, 0.16, 0.08, 90);
+  });
 }
