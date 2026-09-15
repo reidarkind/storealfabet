@@ -32,7 +32,7 @@ function medMinne(innhold: Record<string, string>, kjor: () => void): void {
 }
 
 describe("lagring", () => {
-  it("bruker Alfs stemme som standard og bytter Compact Nora til Alf", () => {
+  it("bruker Alfs stemme som standard, beholder telefonens stemme, og bytter Compact Nora til Alf", () => {
     medMinne({}, () => {
       expect(lesLagring().innstillinger.stemme).toBe("alf");
     });
@@ -45,7 +45,7 @@ describe("lagring", () => {
         }),
       },
       () => {
-        expect(lesLagring().innstillinger.stemme).toBe("alf");
+        expect(lesLagring().innstillinger.stemme).toBe("auto");
       },
     );
     medMinne(

@@ -1,8 +1,5 @@
 export const PIPER_ID = "no_NO-talesyntese-medium";
 
-const STILLE_WAV =
-  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-
 export type AlfStemmeStatus = {
   tilstand: "klar" | "laster" | "feil";
   prosent?: number;
@@ -18,9 +15,12 @@ let piper: PiperPakke | null = null;
 let okt: PiperOkt | null = null;
 let lasting: Promise<boolean> | null = null;
 let spillNr = 0;
-let alfSpiller: HTMLAudioElement | null = null;
+let lydCtx: AudioContext | null = null;
+let alfKilde: AudioBufferSourceNode | null = null;
+let lydvakt: OscillatorNode | null = null;
 let statusLytter: ((status: AlfStemmeStatus) => void) | null = null;
 let sisteStatus: AlfStemmeStatus = { tilstand: "klar" };
+let spillFerdig: (() => void) | null = null;
 
 export function medTidsfrist<T>(jobb: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -52,32 +52,64 @@ function meld(status: AlfStemmeStatus): void {
   statusLytter?.(status);
 }
 
-function hentAlfSpiller(): HTMLAudioElement {
-  if (!alfSpiller) {
-    alfSpiller = new Audio();
-    alfSpiller.preload = "auto";
-    alfSpiller.setAttribute("playsinline", "true");
+export function hentLydKontekst(): AudioContext | null {
+  const Ctx = globalThis.AudioContext || (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) return null;
+  if (!lydCtx) lydCtx = new Ctx();
+  return lydCtx;
+}
+
+function startLydvakt(ctx: AudioContext): void {
+  if (lydvakt) return;
+  const gain = ctx.createGain();
+  gain.gain.value = 0.00004;
+  const osc = ctx.createOscillator();
+  osc.frequency.value = 20;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  try {
+    osc.start();
+    lydvakt = osc;
+    osc.onended = () => {
+      if (lydvakt === osc) lydvakt = null;
+    };
+  } catch {
+    /* kontekst var ikke klar */
   }
-  return alfSpiller;
 }
 
 export function aktiverAlfLyd(): void {
-  const lyd = hentAlfSpiller();
-  if (!lyd.src) lyd.src = STILLE_WAV;
-  void lyd.play().catch(() => {
-    /* iPhone åpner lyden ved trykk; selve setningen kommer etterpå */
-  });
+  const ctx = hentLydKontekst();
+  if (!ctx) return;
+  if (ctx.state === "suspended") {
+    void ctx.resume();
+    lydvakt = null;
+  }
+  if (lydvakt) return;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0012, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+  const osc = ctx.createOscillator();
+  osc.frequency.value = 180;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  try {
+    osc.start();
+    osc.stop(ctx.currentTime + 0.09);
+  } catch {
+    /* kontekst var allerede i gang */
+  }
+  startLydvakt(ctx);
 }
 
-let spillFerdig: (() => void) | null = null;
-
-export function stoppAlfStemme(): void {
-  spillNr += 1;
-  spillFerdig?.();
-  spillFerdig = null;
-  if (!alfSpiller) return;
-  alfSpiller.pause();
-  alfSpiller.currentTime = 0;
+function stoppKilde(): void {
+  if (!alfKilde) return;
+  try {
+    alfKilde.stop();
+  } catch {
+    /* ferdig allerede */
+  }
+  alfKilde = null;
 }
 
 async function medEnTrad<T>(fn: () => Promise<T>): Promise<T> {
@@ -162,38 +194,52 @@ function vent(ms: number): Promise<void> {
 }
 
 async function spillWav(blob: Blob): Promise<void> {
-  const lyd = hentAlfSpiller();
-  const url = URL.createObjectURL(blob);
-  lyd.pause();
-  if (lyd.src.startsWith("blob:")) URL.revokeObjectURL(lyd.src);
-  lyd.src = url;
-  lyd.currentTime = 0;
+  const ctx = hentLydKontekst();
+  if (!ctx) throw new Error("alf-stemme");
+  if (ctx.state === "suspended") await ctx.resume();
+  const buffer = await ctx.decodeAudioData(await blob.arrayBuffer());
   await new Promise<void>((resolve, reject) => {
+    if (alfKilde) {
+      try {
+        alfKilde.stop();
+      } catch {
+        /* ferdig allerede */
+      }
+    }
+    const src = ctx.createBufferSource();
+    alfKilde = src;
+    src.buffer = buffer;
+    src.connect(ctx.destination);
     const ferdig = () => {
       if (spillFerdig === ferdig) spillFerdig = null;
-      lyd.removeEventListener("ended", ferdig);
-      lyd.removeEventListener("error", feil);
+      if (alfKilde === src) alfKilde = null;
       resolve();
     };
     const feil = () => {
       if (spillFerdig === ferdig) spillFerdig = null;
-      lyd.removeEventListener("ended", ferdig);
-      lyd.removeEventListener("error", feil);
+      if (alfKilde === src) alfKilde = null;
       reject(new Error("alf-spill"));
     };
     spillFerdig = ferdig;
-    lyd.addEventListener("ended", ferdig);
-    lyd.addEventListener("error", feil);
-    void lyd.play().catch(feil);
+    src.onended = ferdig;
+    try {
+      src.start();
+    } catch {
+      feil();
+    }
   });
+}
+
+export function stoppAlfStemme(): void {
+  spillNr += 1;
+  spillFerdig?.();
+  spillFerdig = null;
+  stoppKilde();
 }
 
 export async function spillAlfStemme(tekst: string): Promise<void> {
   const nr = ++spillNr;
-  if (alfSpiller) {
-    alfSpiller.pause();
-    alfSpiller.currentTime = 0;
-  }
+  stoppKilde();
   const ok = await lastAlfStemme();
   if (!ok || nr !== spillNr || !okt) throw new Error("alf-stemme");
   await new Promise<void>((resolve) => {
@@ -215,10 +261,7 @@ export async function spillAlfDeler(deler: string[]): Promise<void> {
   const rene = deler.map((d) => d.trim()).filter(Boolean);
   if (rene.length === 0) return;
   const nr = ++spillNr;
-  if (alfSpiller) {
-    alfSpiller.pause();
-    alfSpiller.currentTime = 0;
-  }
+  stoppKilde();
   const ok = await lastAlfStemme();
   if (!ok || nr !== spillNr || !okt) throw new Error("alf-stemme");
   let neste: Promise<Blob> | undefined;

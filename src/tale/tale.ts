@@ -1,6 +1,5 @@
-import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme } from "./alf-stemme";
+import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme, hentLydKontekst } from "./alf-stemme";
 
-let lydCtx: AudioContext | null = null;
 let taleKlar = false;
 let valgtStemmeNavn = "";
 
@@ -15,9 +14,11 @@ export function skalBrukeAlfStemme(navn: string): boolean {
 }
 
 export function migrerStemme(navn: string): string {
-  if (navn === ALF_STEMME || navn === "" || navn === AUTO_STEMME) return ALF_STEMME;
+  if (navn === AUTO_STEMME) return AUTO_STEMME;
+  if (navn === ALF_STEMME || navn === "") return ALF_STEMME;
   const n = navn.toLowerCase();
   if (/microsoft|hedda|compact/.test(n) && /nora|hedda|compact/.test(n)) return ALF_STEMME;
+  if (/nora/i.test(n)) return AUTO_STEMME;
   return navn;
 }
 
@@ -87,6 +88,11 @@ export function velgTaleModus(onsket: string, stemmer: StemmeTreff[]): TaleModus
   if (stemmer.length === 0) return "system";
   const beste = velgBesteStemme(stemmer);
   return beste && stemmeErGodNok(beste) ? "system" : "alf";
+}
+
+export function skalListesSomStemmevalg(navn: string, lang = "", voiceURI = ""): boolean {
+  if (/nora|hedda/i.test(`${navn} ${voiceURI}`)) return false;
+  return stemmeErGodNok({ name: navn, lang, voiceURI });
 }
 
 export function skalBrukeNettleserTale(onsket: string, stemmer: StemmeTreff[]): boolean {
@@ -246,23 +252,17 @@ function finnStemme(): SpeechSynthesisVoice | undefined {
 }
 
 function taleKontekst(): AudioContext | null {
-  const Ctx = globalThis.AudioContext || (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctx) return null;
-  if (!lydCtx) lydCtx = new Ctx();
-  return lydCtx;
+  return hentLydKontekst();
 }
 
 export function aktiverLyd(): void {
-  const ctx = taleKontekst();
-  if (ctx && ctx.state === "suspended") {
-    void ctx.resume();
-  }
   aktiverAlfLyd();
   if (brukerAlfNa()) {
     void lastAlfStemme();
     taleKlar = true;
     return;
   }
+  if (taleKlar) return;
   if (harTale()) {
     speechSynthesis.getVoices();
     speechSynthesis.cancel();

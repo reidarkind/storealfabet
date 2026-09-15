@@ -9,6 +9,7 @@ import {
   stiLydForHendelse,
   stemmeRang,
   skalBrukeNettleserTale,
+  skalListesSomStemmevalg,
   velgBesteStemme,
   velgTaleModus,
 } from "./tale";
@@ -48,9 +49,10 @@ describe("stemmevalg", () => {
     expect(skalBrukeAlfStemme("")).toBe(false);
     expect(skalBrukeAlfStemme("auto")).toBe(false);
     expect(migrerStemme("")).toBe("alf");
-    expect(migrerStemme("auto")).toBe("alf");
+    expect(migrerStemme("auto")).toBe("auto");
     expect(migrerStemme("alf")).toBe("alf");
     expect(migrerStemme("Microsoft Nora Compact")).toBe("alf");
+    expect(migrerStemme("Nora (Enhanced)")).toBe("auto");
     expect(migrerStemme("Google norsk")).toBe("Google norsk");
     expect(velgTaleModus("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }])).toBe(
       "system",
@@ -62,6 +64,9 @@ describe("stemmevalg", () => {
     expect(
       skalBrukeNettleserTale("auto", [{ name: "Nora (Enhanced)", lang: "nb-NO", voiceURI: "com.apple.voice.compact.nb-NO.siri" }]),
     ).toBe(true);
+    expect(skalListesSomStemmevalg("Nora (Enhanced)", "nb-NO")).toBe(false);
+    expect(skalListesSomStemmevalg("Microsoft Nora Compact", "nb-NO")).toBe(false);
+    expect(skalListesSomStemmevalg("Henrik", "nb-NO")).toBe(true);
   });
 
   it("gir korte veilyder i stedet for prat", () => {

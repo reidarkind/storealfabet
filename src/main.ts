@@ -39,6 +39,7 @@ import {
   kanSnakke,
   lesOppgave,
   norskeStemmer,
+  skalListesSomStemmevalg,
   settStemme,
   si,
   spillKling,
@@ -95,6 +96,7 @@ function oppdaterMeny(): void {
 }
 
 function bindMeny(): void {
+  $("knapp-spill").addEventListener("pointerdown", () => aktiverLyd());
   $("knapp-spill").addEventListener("click", () => {
     aktiverLyd();
     void startSpill();
@@ -240,6 +242,7 @@ function fyllStemmer(): void {
     { id: AUTO_STEMME, tekst: "Telefonens stemme" },
   ];
   for (const stemme of norskeStemmer()) {
+    if (!skalListesSomStemmevalg(stemme.name, stemme.lang, stemme.voiceURI)) continue;
     knapper.push({ id: stemme.name, tekst: stemme.name });
   }
   for (const rad of knapper) {
@@ -1285,6 +1288,7 @@ document.addEventListener("visibilitychange", () => {
   }
   fortsettTimer();
 });
+document.addEventListener("pointerdown", () => aktiverLyd(), { capture: true });
 oppdaterMeny();
 vis("skjerm-meny");
 visInstallasjon();
