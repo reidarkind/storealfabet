@@ -51,17 +51,13 @@
         <label class="stemme-etikett" id="stemme-etikett" for="stemme-valg">Stemme nettleseren kan bruke</label>
         <div class="stemme-rad">
           <select id="stemme-valg" class="stemme-liste" aria-labelledby="stemme-etikett"></select>
-          <button type="button" id="stemme-hjelp-apne" class="hjelp-ikon" aria-haspopup="dialog" aria-controls="stemme-hjelp-dialog" aria-label="Hjelp til stemmevalg">?</button>
+          <button type="button" id="stemme-hjelp-apne" class="hjelp-ikon" aria-haspopup="dialog" aria-controls="stemme-hjelp-dialog" aria-label="Hjelp til stemmer på Android">?</button>
         </div>
         <p id="stemme-status" class="stemme-status" hidden></p>
         <dialog id="stemme-hjelp-dialog" class="hjelp-dialog" aria-labelledby="stemme-hjelp-tittel">
-          <h2 id="stemme-hjelp-tittel" tabindex="-1">Slik finner du stemmer</h2>
+          <h2 id="stemme-hjelp-tittel" tabindex="-1">Norske stemmer på Android</h2>
           <div class="stemme-hjelp">
-            <p>Listen viser det nettleseren faktisk kan. Alfs stemme lastes ned første gang og virker uten stegene under.</p>
-            <p>
-              <strong>iPhone</strong>
-              Åpne appen Innstillinger (Settings) → Tilgjengelighet (Accessibility) → Opplest innhold eller Les og snakk (Spoken Content / Read &amp; Speak) → Stemmer (Voices) → Norsk bokmål (Norwegian Bokmål). Last ned Nora eller Henrik, gjerne Forbedret (Enhanced). Navnet kommer bare i listen over hvis Safari får den — ofte gjør den ikke det.
-            </p>
+            <p>På iPhone viser Safari vanligvis bare Nora. Henrik fra telefonen kan nettsider ikke bruke. Velg Alfs stemme.</p>
             <p>
               <strong>Android</strong>
               Åpne appen Innstillinger (Settings) → Tilgjengelighet (Accessibility) → Tekst-til-tale (Text-to-speech). På noen telefoner: System → Språk og inndata (Languages &amp; input) → Tekst-til-tale. Velg Google tekst-til-tale (Google Text-to-speech) → installer stemmedata (Install voice data) → Norsk (Norwegian). Åpne Innstillinger i denne appen på nytt etterpå.
