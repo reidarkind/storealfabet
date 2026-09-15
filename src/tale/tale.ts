@@ -1,4 +1,5 @@
-import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme, medKjorendeLyd } from "./alf-stemme";
+import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme } from "./alf-stemme";
+import { aktiverEffektLyd, spillEffektToner, type EffektTone } from "./effekt-lyd";
 
 let taleKlar = false;
 let valgtStemmeNavn = "";
@@ -320,6 +321,7 @@ function finnStemme(stemmer?: SpeechSynthesisVoice[]): SpeechSynthesisVoice | un
 
 export function aktiverLyd(): void {
   aktiverAlfLyd();
+  aktiverEffektLyd();
   if (brukerAlfNa()) {
     void lastAlfStemme();
     taleKlar = true;
@@ -401,68 +403,45 @@ export function stoppTale(): void {
   if (harTale()) speechSynthesis.cancel();
 }
 
-function spillTone(
-  ctx: AudioContext,
-  type: OscillatorType,
-  frekvens: number,
-  start: number,
-  varighet: number,
-  volum: number,
-  sluttFrekvens?: number,
-): void {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(frekvens, start);
-  if (sluttFrekvens != null) {
-    osc.frequency.exponentialRampToValueAtTime(Math.max(1, sluttFrekvens), start + varighet);
+function tonerForSti(type: StiLyd): EffektTone[] {
+  if (type === "krystall") return [{ type: "sine", frekvens: 980, start: 0, varighet: 0.16, volum: 0.09 }];
+  if (type === "diamant") {
+    return [
+      { type: "sine", frekvens: 880, start: 0, varighet: 0.1, volum: 0.08 },
+      { type: "sine", frekvens: 1174, start: 0.07, varighet: 0.1, volum: 0.08 },
+      { type: "sine", frekvens: 1568, start: 0.14, varighet: 0.16, volum: 0.09 },
+    ];
   }
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(volum, start + 0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + varighet);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(start);
-  osc.stop(start + varighet + 0.02);
+  if (type === "bil") {
+    return [
+      { type: "square", frekvens: 370, start: 0, varighet: 0.22, volum: 0.05 },
+      { type: "square", frekvens: 466, start: 0, varighet: 0.22, volum: 0.04 },
+    ];
+  }
+  if (type === "sykkel") {
+    return [
+      { type: "triangle", frekvens: 1760, start: 0, varighet: 0.12, volum: 0.07 },
+      { type: "triangle", frekvens: 1480, start: 0.16, varighet: 0.14, volum: 0.07 },
+    ];
+  }
+  if (type === "baesj") {
+    return [
+      { type: "sine", frekvens: 120, start: 0, varighet: 0.22, volum: 0.1, sluttFrekvens: 55 },
+      { type: "triangle", frekvens: 80, start: 0.04, varighet: 0.18, volum: 0.06, sluttFrekvens: 40 },
+    ];
+  }
+  return [
+    { type: "square", frekvens: 220, start: 0, varighet: 0.08, volum: 0.05 },
+    { type: "sine", frekvens: 140, start: 0.06, varighet: 0.16, volum: 0.08, sluttFrekvens: 90 },
+  ];
 }
 
 export function spillKling(lydPa: boolean, frekvens = 620): void {
   if (!lydPa) return;
-  void medKjorendeLyd((ctx) => {
-    spillTone(ctx, "sine", frekvens, ctx.currentTime, 0.18, 0.08);
-  });
+  spillEffektToner([{ type: "sine", frekvens, start: 0, varighet: 0.18, volum: 0.08 }]);
 }
 
 export function spillStiLyd(lydPa: boolean, type: StiLyd): void {
   if (!lydPa) return;
-  void medKjorendeLyd((ctx) => {
-    const t = ctx.currentTime;
-    if (type === "krystall") {
-      spillTone(ctx, "sine", 980, t, 0.16, 0.09);
-      return;
-    }
-    if (type === "diamant") {
-      spillTone(ctx, "sine", 880, t, 0.1, 0.08);
-      spillTone(ctx, "sine", 1174, t + 0.07, 0.1, 0.08);
-      spillTone(ctx, "sine", 1568, t + 0.14, 0.16, 0.09);
-      return;
-    }
-    if (type === "bil") {
-      spillTone(ctx, "square", 370, t, 0.22, 0.05);
-      spillTone(ctx, "square", 466, t, 0.22, 0.04);
-      return;
-    }
-    if (type === "sykkel") {
-      spillTone(ctx, "triangle", 1760, t, 0.12, 0.07);
-      spillTone(ctx, "triangle", 1480, t + 0.16, 0.14, 0.07);
-      return;
-    }
-    if (type === "baesj") {
-      spillTone(ctx, "sine", 120, t, 0.22, 0.1, 55);
-      spillTone(ctx, "triangle", 80, t + 0.04, 0.18, 0.06, 40);
-      return;
-    }
-    spillTone(ctx, "square", 220, t, 0.08, 0.05);
-    spillTone(ctx, "sine", 140, t + 0.06, 0.16, 0.08, 90);
-  });
+  spillEffektToner(tonerForSti(type));
 }

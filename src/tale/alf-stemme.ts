@@ -70,10 +70,33 @@ export function hentLydKontekst(): AudioContext | null {
   return lydCtx;
 }
 
-/** Åpner både HTML-lyd (Alf) og Web Audio (pling/plong) i samme fingertrykk. */
+/** Kort, nesten stille buffer — må spilles i samme trykk som resume, ellers forblir iPhone stum. */
+function spillWebAudioOpplasning(ctx: AudioContext): void {
+  try {
+    const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    gain.gain.value = 0.001;
+    src.buffer = buffer;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(0);
+  } catch {
+    /* noen nettlesere nekter start mens suspended; resume kommer like etter */
+  }
+}
+
+/** Åpner HTML-lyd (Alf) og Web Audio i samme fingertrykk. */
 export function aktiverAlfLyd(): void {
   const ctx = hentLydKontekst();
-  if (ctx && ctx.state === "suspended") void ctx.resume();
+  if (ctx) {
+    spillWebAudioOpplasning(ctx);
+    if (ctx.state === "suspended") {
+      void ctx.resume().then(() => {
+        if (ctx.state === "running") spillWebAudioOpplasning(ctx);
+      });
+    }
+  }
 
   const lyd = hentAlfSpiller();
   const snakker = !lyd.paused && !lyd.ended && lyd.src.startsWith("blob:");
