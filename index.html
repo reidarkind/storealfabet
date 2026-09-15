@@ -12,9 +12,6 @@
     <link rel="icon" type="image/png" href="ikon-192.png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <title>StoreAlfabet</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="app">
@@ -56,6 +53,9 @@
         <p id="stemme-status" class="stemme-status" hidden></p>
         <p class="stemme-hjelp">Alfs stemme er standard og lastes ned første gang appen åpnes. Telefonens stemme bruker Siri eller den beste norske stemmen på telefonen.</p>
         <button type="button" id="prov-stemme" class="sekundaer">Prøv stemmen</button>
+        <p>Etter første åpning kan du spille uten nett. Nye versjoner hentes bare når du sjekker.</p>
+        <button type="button" id="sjekk-oppdatering" class="sekundaer">Sjekk for oppdateringer</button>
+        <p id="oppdatering-status" class="stemme-status" hidden></p>
         <button type="button" id="nullstill-rekord" class="sekundaer">Nullstill rekorder</button>
         <div id="nullstill-sjekk" class="bekreft" hidden>
           <p>Vil du slette alle rekorder på denne telefonen?</p>
@@ -110,6 +110,7 @@
           <li>Åpne StoreAlfabet fra startskjermen.</li>
         </ol>
         <p>Etter installasjon åpner du appen fra ikonet, ikke fra en vanlig fane.</p>
+        <p>Når du har åpnet appen én gang, kan du spille uten nett.</p>
         <h2>Opphav</h2>
         <p>Ideen er Reidar Kind sin. Utviklet ved hjelp av AI.</p>
         <nav class="more-links" aria-label="Mer">

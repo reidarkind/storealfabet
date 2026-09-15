@@ -5,7 +5,7 @@ export default defineConfig({
   base: "/storealfabet/",
   plugins: [
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["ikon-192.png", "ikon-512.png", "apple-touch-icon.png", "ikon.svg"],
       manifest: {
         name: "StoreAlfabet",
@@ -25,7 +25,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2,json}"],
+        globPatterns: ["**/*.{js,css,html,svg,png,woff2,json,wasm}"],
       },
     }),
   ],

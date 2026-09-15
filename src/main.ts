@@ -52,8 +52,11 @@ import { rasterFraAlpha, vurderTegning } from "./tegning/vurder";
 import { lerretPunkt } from "./tegning/punkt";
 import { MELK_NAVN, NIVAA_NAVN, type Innstillinger, type Melk, type Nivaa, type Oppgave, type Sekk } from "./typer";
 import type { Tur } from "./spill/tur";
+import { oppdateringTekst, sjekkForOppdatering } from "./pwa/oppdatering";
+
 const TID = 30;
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const oppdaterSW = registerSW({ immediate: true });
 
 let innstillinger: Innstillinger = lesLagring().innstillinger;
 let tur: Tur | null = null;
@@ -162,11 +165,54 @@ function bindMeny(): void {
     $("lyd-pa").textContent = innstillinger.lydPa ? "Lyd er på" : "Lyd er av";
     $("lyd-pa").setAttribute("aria-pressed", String(innstillinger.lydPa));
   });
+  $("sjekk-oppdatering").addEventListener("click", () => {
+    void sjekkOppdatering();
+  });
 }
 
 function persist(): void {
   const lagret = lesLagring();
   skrivLagring({ ...lagret, innstillinger });
+}
+
+function visOppdateringStatus(tekst: string): void {
+  const el = $("oppdatering-status");
+  el.textContent = tekst;
+  el.hidden = !tekst;
+}
+
+async function hentNyVersjon(): Promise<boolean> {
+  if (!("serviceWorker" in navigator)) return false;
+  const reg = await navigator.serviceWorker.getRegistration();
+  if (!reg) return false;
+  await reg.update();
+  if (reg.waiting) return true;
+  const installing = reg.installing;
+  if (!installing) return false;
+  await new Promise<void>((resolve) => {
+    const ferdig = () => {
+      if (installing.state === "installed" || installing.state === "redundant") {
+        installing.removeEventListener("statechange", ferdig);
+        resolve();
+      }
+    };
+    installing.addEventListener("statechange", ferdig);
+    ferdig();
+  });
+  return Boolean(reg.waiting);
+}
+
+async function sjekkOppdatering(): Promise<void> {
+  visOppdateringStatus(oppdateringTekst("sjekker"));
+  const utfall = await sjekkForOppdatering({
+    online: navigator.onLine,
+    hentNyVersjon,
+  });
+  visOppdateringStatus(oppdateringTekst(utfall));
+  if (utfall === "ny") {
+    await new Promise((resolve) => window.setTimeout(resolve, 700));
+    await oppdaterSW(true);
+  }
 }
 
 function fyllRekordTavle(tavle: { navn: string; verdi: number; melk: Melk }[]): void {
@@ -1225,8 +1271,6 @@ function visInstallasjon(): void {
     ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
   $("install-hint").hidden = standalone;
 }
-
-registerSW({ immediate: true });
 
 bindMeny();
 bindTegning();
