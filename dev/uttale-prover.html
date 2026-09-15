@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lokal uttaleprøve (ikke i spillet)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Segoe UI", sans-serif;
+        background: #1b1633;
+        color: #fff4dc;
+      }
+      body {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 1.2rem;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      p,
+      li {
+        line-height: 1.45;
+      }
+      .status {
+        min-height: 1.4rem;
+        color: #f4d27a;
+      }
+      section {
+        background: #2a2250;
+        border-radius: 1rem;
+        padding: 0.9rem 1rem 1rem;
+        margin: 0.9rem 0;
+      }
+      h2 {
+        margin: 0 0 0.4rem;
+        font-size: 1.05rem;
+      }
+      .rad {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.55rem;
+      }
+      button {
+        background: #3d2a6e;
+        color: #fff4dc;
+        border: 0;
+        border-radius: 999px;
+        padding: 0.45rem 0.85rem;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: wait;
+      }
+      code {
+        color: #f4d27a;
+        font-size: 0.86rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Lokal lytteside for å høre Alf. Ikke en del av PWA-en. Åpnes via npm run dev. -->
+    <p class="status" id="status">Laster Alfs stemme…</p>
+    <h1>Hør tre måter å si det på</h1>
+    <p>Samme stemme som i appen. Trykk én gang for å åpne lyden på telefonen, deretter spill.</p>
+
+    <section>
+      <h2>1. Ordet «lese»</h2>
+      <p>Skjermen viser: <strong>Hvilken bokstav begynner ordet «lese» med?</strong></p>
+      <div class="rad">
+        <button type="button" data-prove="lese-naa" disabled>A. Som nå</button>
+        <button type="button" data-prove="lese-punktum" disabled>B. Punktum-pause</button>
+        <button type="button" data-prove="lese-klipp" disabled>C. Klipp med stillhet</button>
+        <button type="button" data-prove="lese-valgt" disabled>Valgt løsning</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Bokstaven E</h2>
+      <p>Skjermen viser: <strong>Finn den lille bokstaven til E</strong></p>
+      <div class="rad">
+        <button type="button" data-prove="e-naa" disabled>A. Som nå</button>
+        <button type="button" data-prove="e-punktum" disabled>B. Punktum-pause</button>
+        <button type="button" data-prove="e-klipp" disabled>C. Klipp med stillhet</button>
+        <button type="button" data-prove="e-valgt" disabled>Valgt løsning</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Konsonant R</h2>
+      <p>Skjermen viser: <strong>Finn den lille bokstaven til R</strong></p>
+      <div class="rad">
+        <button type="button" data-prove="r-naa" disabled>A. Som før</button>
+        <button type="button" data-prove="r-valgt" disabled>Valgt løsning</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Ekte oppgaver fra appen</h2>
+      <p>Slik Alf leser dem nå. Teksten på knappen er det som står på skjermen.</p>
+      <div class="rad">
+        <button type="button" data-oppgave disabled>Finn den lille bokstaven til R</button>
+        <button type="button" data-oppgave disabled>Hva sier bokstaven R?</button>
+        <button type="button" data-oppgave disabled>Hvilken bokstav lager lyden rrr?</button>
+        <button type="button" data-oppgave disabled>Hvilken bokstav slutter ordet «de» på?</button>
+        <button type="button" data-oppgave disabled>Hva begynner ordet «sol» med?</button>
+        <button type="button" data-oppgave disabled>Hvilket ord begynner med bokstaven «S»?</button>
+        <button type="button" data-oppgave disabled>Trekk sammen: rrr – aaa – mmm</button>
+        <button type="button" data-oppgave disabled>Finn den store bokstaven til r</button>
+      </div>
+    </section>
+
+    <p>A er den gamle, jevne setningen. Valgt løsning er det som ligger i appen nå.</p>
+    <script type="module" src="./uttale-prover.ts"></script>
+  </body>
+</html>

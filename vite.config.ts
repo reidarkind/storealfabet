@@ -3,6 +3,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   base: "/storealfabet/",
+  build: {
+    rollupOptions: {
+      input: "index.html",
+    },
+  },
   plugins: [
     VitePWA({
       registerType: "prompt",

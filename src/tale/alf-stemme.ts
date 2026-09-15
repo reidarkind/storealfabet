@@ -177,3 +177,82 @@ export async function spillAlfStemme(tekst: string): Promise<void> {
   if (nr !== spillNr) return;
   await spillWav(wav);
 }
+
+export async function lagAlfLyd(tekst: string): Promise<Blob> {
+  const ok = await lastAlfStemme();
+  if (!ok || !okt) throw new Error("alf-stemme");
+  return medTidsfrist(okt.predict(tekst), 15000);
+}
+
+function hentLimCtx(): AudioContext {
+  const Ctx = globalThis.AudioContext || (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) throw new Error("alf-stemme");
+  return new Ctx();
+}
+
+function bufferTilWav(buffer: AudioBuffer): Blob {
+  const kanal = buffer.getChannelData(0);
+  const data = new Int16Array(kanal.length);
+  for (let i = 0; i < kanal.length; i += 1) {
+    const x = Math.max(-1, Math.min(1, kanal[i] ?? 0));
+    data[i] = x < 0 ? x * 0x8000 : x * 0x7fff;
+  }
+  const hode = 44;
+  const bytes = new ArrayBuffer(hode + data.byteLength);
+  const visning = new DataView(bytes);
+  const skriv = (offset: number, tekst: string) => {
+    for (let i = 0; i < tekst.length; i += 1) visning.setUint8(offset + i, tekst.charCodeAt(i));
+  };
+  skriv(0, "RIFF");
+  visning.setUint32(4, 36 + data.byteLength, true);
+  skriv(8, "WAVE");
+  skriv(12, "fmt ");
+  visning.setUint32(16, 16, true);
+  visning.setUint16(20, 1, true);
+  visning.setUint16(22, 1, true);
+  visning.setUint32(24, buffer.sampleRate, true);
+  visning.setUint32(28, buffer.sampleRate * 2, true);
+  visning.setUint16(32, 2, true);
+  visning.setUint16(34, 16, true);
+  skriv(36, "data");
+  visning.setUint32(40, data.byteLength, true);
+  new Uint8Array(bytes, hode).set(new Uint8Array(data.buffer));
+  return new Blob([bytes], { type: "audio/wav" });
+}
+
+async function limAlfLyd(deler: string[], pauseSek: number): Promise<Blob> {
+  const ctx = hentLimCtx();
+  if (ctx.state === "suspended") await ctx.resume();
+  const buffere: AudioBuffer[] = [];
+  for (const del of deler) {
+    const wav = await lagAlfLyd(del);
+    buffere.push(await ctx.decodeAudioData(await wav.arrayBuffer()));
+  }
+  const rate = buffere[0]?.sampleRate ?? 22050;
+  const pause = Math.round(rate * pauseSek);
+  const total = buffere.reduce((sum, b) => sum + b.length, 0) + pause * Math.max(0, buffere.length - 1);
+  const ut = ctx.createBuffer(1, total, rate);
+  let pos = 0;
+  for (const [i, b] of buffere.entries()) {
+    ut.getChannelData(0).set(b.getChannelData(0), pos);
+    pos += b.length;
+    if (i < buffere.length - 1) pos += pause;
+  }
+  void ctx.close();
+  return bufferTilWav(ut);
+}
+
+export async function spillAlfDeler(deler: string[]): Promise<void> {
+  const rene = deler.map((d) => d.trim()).filter(Boolean);
+  if (rene.length === 0) return;
+  const nr = ++spillNr;
+  if (alfSpiller) {
+    alfSpiller.pause();
+    alfSpiller.currentTime = 0;
+  }
+  const ok = await lastAlfStemme();
+  if (!ok || nr !== spillNr || !okt) throw new Error("alf-stemme");
+  const wav = rene.length === 1 ? await lagAlfLyd(rene[0]!) : await limAlfLyd(rene, 0.22);
+  if (nr !== spillNr) return;
+  await spillWav(wav);
+}

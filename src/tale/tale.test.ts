@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   erNorskLang,
+  forberedTaleDeler,
   forberedUttale,
   lesOppgave,
   migrerStemme,
@@ -75,19 +76,56 @@ describe("stemmevalg", () => {
     expect(forberedUttale("Alf rekker skolen")).toMatch(/sko/i);
     expect(forberedUttale("En zombie dultet til Alf")).toMatch(/såmbi|zombi/i);
     expect(forberedUttale("krystall og diamant")).toMatch(/krysstall|krys-tall/i);
+    expect(forberedTaleDeler("Hva begynner ordet «sol» med?")).toEqual(["Hva begynner ordet. sol. med?"]);
   });
 
-  it("leser hele spørsmålet og sier lang lyd bare én gang", () => {
-    expect(forberedUttale("Trekk sammen: lll – eee – rrr")).toBe("Trekk sammen: l – e – r");
-    expect(forberedUttale("Hvilken bokstav sier aaa?")).toBe("Hvilken bokstav sier a?");
+  it("klipper trekk-sammen-lyder som isolerte bokstaver", () => {
+    expect(forberedTaleDeler("Trekk sammen: rrr – aaa – mmm")).toEqual(["Trekk sammen:", "r", "a", "m"]);
+    expect(forberedTaleDeler("Trekk sammen: lll – eee – rrr")).toEqual(["Trekk sammen:", "l", "e", "r"]);
     expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).toMatch(/trekk sammen/i);
-    expect(lesOppgave({ prompt: "Trekk sammen: lll – eee – rrr", tale: "l. e. r." })).not.toMatch(/lll|eee|rrr/i);
+    expect(forberedUttale("Trekk sammen: lll – eee – rrr")).not.toMatch(/lll|rrr/i);
   });
 
-  it("tar en tenkepause og trykk rundt det siterte ordet", () => {
-    const ut = forberedUttale("Hvilken bokstav slutter «de» på?");
-    expect(ut).toMatch(/slutter\s+–\s+de\s+–\s+på/);
-    expect(ut).not.toContain("«");
-    expect(lesOppgave({ prompt: "Hvilken bokstav slutter «de» på?", tale: "de" })).toMatch(/–\s+de\s+–/);
+  it("tar punktum-pause etter ordet, og klipper andre siterte ord uten punktum på verbet", () => {
+    expect(forberedUttale("Hvilken bokstav begynner ordet «lese» med?")).toMatch(/ordet\.\s*lese\.\s*med/i);
+    expect(forberedTaleDeler("Hvilken bokstav slutter ordet «de» på?")).toEqual([
+      "Hvilken bokstav slutter ordet.",
+      "de",
+      "på?",
+    ]);
+    expect(lesOppgave({ prompt: "Hvilken bokstav slutter ordet «de» på?", tale: "de" })).toBe(
+      "Hvilken bokstav slutter ordet «de» på?",
+    );
+  });
+
+  it("klipper bokstavlyder én gang som eget klipp", () => {
+    expect(forberedTaleDeler("Finn den lille bokstaven til E")).toEqual([
+      "Finn den lille bokstaven til.",
+      "e",
+    ]);
+    expect(forberedTaleDeler("Finn den lille bokstaven til R")).toEqual([
+      "Finn den lille bokstaven til.",
+      "r",
+    ]);
+    expect(forberedTaleDeler("Hvilket ord begynner med bokstaven «S»?")).toEqual([
+      "Hvilket ord begynner med bokstaven?",
+      "s",
+    ]);
+    expect(forberedTaleDeler("Finn den store bokstaven til r")).toEqual([
+      "Finn den store bokstaven til.",
+      "r",
+    ]);
+  });
+
+  it("skiller ordet lyden fra selve lyden", () => {
+    expect(forberedTaleDeler("Hvilken bokstav lager lyden rrr?")).toEqual([
+      "Hvilken bokstav lager lyden?",
+      "r",
+    ]);
+    expect(forberedTaleDeler("Hvilken bokstav sier aaa?")).toEqual(["Hvilken bokstav sier?", "a"]);
+    expect(forberedTaleDeler("Finn den lille bokstaven til A")).toEqual([
+      "Finn den lille bokstaven til.",
+      "a",
+    ]);
   });
 });

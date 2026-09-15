@@ -1,4 +1,4 @@
-import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfStemme, stoppAlfStemme } from "./alf-stemme";
+import { aktiverAlfLyd, alfErKlar, lastAlfStemme, spillAlfDeler, stoppAlfStemme } from "./alf-stemme";
 
 let lydCtx: AudioContext | null = null;
 let taleKlar = false;
@@ -137,14 +137,100 @@ const UTTALE: [RegExp, string][] = [
   [/\bhundebæsj\b/gi, "hunde-bæsj"],
 ];
 
+const KLIPP_RE = /⟦([^⟧]+)⟧/g;
+/** Korte siterte ord («de», «se») limer seg i samme ytring. */
+const KORT_SITAT = 2;
+
+function bokstavLyd(bok: string): string {
+  return bok.toLowerCase();
+}
+
+function rydd(tekst: string): string {
+  return tekst
+    .replace(/\s+/g, " ")
+    .replace(/ *\. */g, ". ")
+    .replace(/\s+([?!])/g, "$1")
+    .trim();
+}
+
+function erSkille(tekst: string): boolean {
+  return /^[?!.–,;:\-\s]+$/.test(tekst);
+}
+
+function klipp(lyd: string): string {
+  return `⟦${lyd}⟧`;
+}
+
+function pause(sporsmal?: string): "." | "?" {
+  return sporsmal ? "?" : ".";
+}
+
+function pauseForanLyd(pre: string, bok: string, sporsmal?: string): string {
+  return `${pre}${pause(sporsmal)} ${klipp(bokstavLyd(bok))}`;
+}
+
+function siterOrdTale(ord: string, etterOrdet: boolean): string {
+  const kort = ord.length <= KORT_SITAT;
+  if (etterOrdet) return kort ? `ordet. ${klipp(ord)}` : `ordet. ${ord}.`;
+  return kort ? ` ${klipp(ord)} ` : ` ${ord}. `;
+}
+
+function kollapsUtenforKlipp(tekst: string): string {
+  return tekst.replace(/⟦[^⟧]*⟧|([a-zæøå])\1{2,}/gi, (treff, bok: string | undefined) => bok ?? treff);
+}
+
+/**
+ * Alf (Piper) tåler ikke SSML. Det som virker:
+ * - Bokstavlyd = ett lite bokstavklipp. Aldri aaa/eee/rrr (blir å, e-e-e, er-er-er).
+ * - Pause før isolert bokstav: ? i spørsmål, ellers punktum.
+ * - ordet «lese»/«sol»: punktum i samme ytring. ordet «de»: eget klipp.
+ * - Trekk-sammen-lyder som egne klipp, uten å lese tankestreken.
+ * - skole→skoole bare i løpende tale, ikke som isolert «sool».
+ */
+export function forberedTaleDeler(tekst: string): string[] {
+  const merket = kollapsUtenforKlipp(
+    tekst
+      .replace(/«([A-Za-zÆØÅæøå])»(\s*\?)?/g, (_all, bok: string, spm: string | undefined) => pauseForanLyd("", bok, spm))
+      .replace(
+        /(^|[^A-Za-zÆØÅæøå])([A-ZÆØÅ])(?![A-Za-zÆØÅæøå])(\s*\?)?/g,
+        (_all, pre: string, bok: string, spm: string | undefined) => pauseForanLyd(pre, bok, spm),
+      )
+      .replace(
+        /\b(til|på|bokstaven)\s+([a-zæøå])\b(\s*\?)?/gi,
+        (_all, pre: string, bok: string, spm: string | undefined) => pauseForanLyd(pre, bok, spm),
+      )
+      .replace(
+        /\b(lyden|sier|Hør)\s+([a-zæøå])\2{2,}(\s*\?)?/gi,
+        (_all, pre: string, bok: string, spm: string | undefined) => pauseForanLyd(pre, bok, spm),
+      )
+      .replace(/⟦[^⟧]*⟧|\b([a-zæøå])\1{2,}\b/gi, (treff, bok: string | undefined) =>
+        bok ? klipp(bokstavLyd(bok)) : treff,
+      ),
+  )
+    .replace(/\bordet\s*«([^»]+)»/gi, (_all, ord: string) => siterOrdTale(ord, true))
+    .replace(/«([^»]+)»/g, (_all, ord: string) => siterOrdTale(ord, false));
+  const medOrd = UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), merket);
+  const deler: string[] = [];
+  let siste = 0;
+  KLIPP_RE.lastIndex = 0;
+  let treff: RegExpExecArray | null;
+  while ((treff = KLIPP_RE.exec(medOrd))) {
+    const foran = rydd(medOrd.slice(siste, treff.index));
+    if (foran && !erSkille(foran)) deler.push(foran);
+    deler.push(treff[1] ?? "");
+    siste = treff.index + treff[0].length;
+  }
+  const resten = rydd(medOrd.slice(siste));
+  if (resten && !erSkille(resten)) deler.push(resten);
+  return deler.filter(Boolean);
+}
+
 export function forberedUttale(tekst: string): string {
-  const enLyd = tekst.replace(/([a-zæøå])\1{2,}/gi, "$1");
-  const medPause = enLyd.replace(/«([^»]+)»/g, " – $1 – ");
-  return UTTALE.reduce((ut, [fra, til]) => ut.replace(fra, til), medPause);
+  return forberedTaleDeler(tekst).join(" ");
 }
 
 export function lesOppgave(oppgave: { prompt: string; tale: string }): string {
-  return forberedUttale(oppgave.prompt || oppgave.tale);
+  return oppgave.prompt || oppgave.tale;
 }
 
 export function stemmeEtikett(navn: string): string {
@@ -194,18 +280,26 @@ export function aktiverLyd(): void {
 function siMedNettleser(tekst: string): void {
   if (!harTale()) return;
   speechSynthesis.cancel();
-  const ytring = new SpeechSynthesisUtterance(forberedUttale(tekst));
-  ytring.lang = "nb-NO";
-  ytring.pitch = 1;
-  const stemme = finnStemme();
-  if (stemme) {
-    ytring.voice = stemme;
-    ytring.lang = stemme.lang.startsWith("nb") || stemme.lang.startsWith("no") ? stemme.lang : "nb-NO";
-    ytring.rate = /microsoft/i.test(stemme.name) && !/neural|natural|online/i.test(stemme.name) ? 0.82 : 0.9;
-  } else {
-    ytring.rate = 0.9;
-  }
-  speechSynthesis.speak(ytring);
+  const deler = forberedTaleDeler(tekst);
+  const siDel = (i: number): void => {
+    if (i >= deler.length) return;
+    const ytring = new SpeechSynthesisUtterance(deler[i]);
+    ytring.lang = "nb-NO";
+    ytring.pitch = 1;
+    const stemme = finnStemme();
+    if (stemme) {
+      ytring.voice = stemme;
+      ytring.lang = stemme.lang.startsWith("nb") || stemme.lang.startsWith("no") ? stemme.lang : "nb-NO";
+      ytring.rate = /microsoft/i.test(stemme.name) && !/neural|natural|online/i.test(stemme.name) ? 0.82 : 0.9;
+    } else {
+      ytring.rate = 0.9;
+    }
+    ytring.onend = () => {
+      if (i + 1 < deler.length) window.setTimeout(() => siDel(i + 1), 220);
+    };
+    speechSynthesis.speak(ytring);
+  };
+  siDel(0);
 }
 
 export function si(tekst: string, lydPa: boolean): void {
@@ -213,17 +307,17 @@ export function si(tekst: string, lydPa: boolean): void {
   if (!taleKlar) aktiverLyd();
   stoppTale();
   if (brukerAlfNa()) {
-    void spillAlfUtenNora(forberedUttale(tekst));
+    void spillAlfUtenNora(forberedTaleDeler(tekst));
     return;
   }
   siMedNettleser(tekst);
 }
 
-async function spillAlfUtenNora(tekst: string): Promise<void> {
+async function spillAlfUtenNora(deler: string[]): Promise<void> {
   const ok = alfErKlar() || (await lastAlfStemme());
   if (!ok) return;
   try {
-    await spillAlfStemme(tekst);
+    await spillAlfDeler(deler);
   } catch {
     /* Alf skal ikke byttes ut med Nora midt i setningen */
   }

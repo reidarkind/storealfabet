@@ -7,8 +7,8 @@ describe("sitat", () => {
   });
 
   it("merker siterte ord i spørsmålstekst", () => {
-    expect(htmlMedSitertOrd("Hvilken bokstav slutter «de» på?")).toBe(
-      'Hvilken bokstav slutter <span class="oppgave-ord">«de»</span> på?',
+    expect(htmlMedSitertOrd("Hvilken bokstav slutter ordet «de» på?")).toBe(
+      'Hvilken bokstav slutter ordet <span class="oppgave-ord">«de»</span> på?',
     );
   });
 });

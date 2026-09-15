@@ -292,7 +292,7 @@ function forstelyder(): Oppgave[] {
         nivaa: "forste",
         prompt: mal(
           [
-            `Hva begynner ${siterOrd(rad.ord)} på?`,
+            `Hva begynner ordet ${siterOrd(rad.ord)} med?`,
             `Hvilken bokstav hører du først i ${siterOrd(rad.ord)}?`,
             `Hvilken lyd starter ordet ${siterOrd(rad.ord)} med?`,
             `Første bokstav i ${siterOrd(rad.ord)}?`,
@@ -314,7 +314,7 @@ function forstelyder(): Oppgave[] {
         nivaa: i % 2 === 0 ? "forste" : "andre",
         prompt: mal(
           [
-            `Hvilken bokstav slutter ${siterOrd(rad.ord)} på?`,
+            `Hvilken bokstav slutter ordet ${siterOrd(rad.ord)} på?`,
             `Hvilken lyd hører du sist i ${siterOrd(rad.ord)}?`,
             `Siste bokstav i ${siterOrd(rad.ord)}?`,
             `${siterOrd(rad.ord)} ender på …?`,
@@ -620,10 +620,10 @@ function finnOrd(): Oppgave[] {
           type: "byggOrd",
           nivaa: "forste",
           prompt: mal(
-            [`Hvilket ord begynner på ${siterOrd(stor)}?`, `Hvilket ord starter med ${siterOrd(bokstav)}?`, `Finn ordet som begynner på ${siterOrd(stor)}.`],
+            [`Hvilket ord begynner med bokstaven ${siterOrd(stor)}?`, `Hvilket ord starter med bokstaven ${siterOrd(bokstav)}?`, `Finn ordet som begynner med bokstaven ${siterOrd(stor)}.`],
             `finnstart-${bokstav}`,
           ),
-          tale: `hvilket ord begynner på ${bokstav}`,
+          tale: `hvilket ord begynner med bokstaven ${bokstav}`,
           valg: valgMed(fasit, andre, `finnstart-${bokstav}`),
           fasit,
           hint: `${fasit} begynner på ${bokstav}.`,
@@ -642,10 +642,10 @@ function finnOrd(): Oppgave[] {
         type: "byggOrd",
         nivaa: "andre",
         prompt: mal(
-          [`Hvilket ord slutter på ${siterOrd(bokstav)}?`, `Finn ordet som ender på ${siterOrd(bokstav)}.`, `Hvilket ord har ${siterOrd(bokstav)} til slutt?`],
+          [`Hvilket ord slutter med bokstaven ${siterOrd(bokstav)}?`, `Finn ordet som ender med bokstaven ${siterOrd(bokstav)}.`, `Hvilket ord har ${siterOrd(bokstav)} til slutt?`],
           `finnslutt-${bokstav}`,
         ),
-        tale: `hvilket ord slutter på ${bokstav}`,
+        tale: `hvilket ord slutter med bokstaven ${bokstav}`,
         valg: valgMed(fasit, andre, `finnslutt-${bokstav}`),
         fasit,
         hint: `${fasit} slutter på ${bokstav}.`,
