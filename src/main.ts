@@ -31,7 +31,7 @@ import {
 import { prosjektDekor, prosjektDist, prosjektPunkt, skolePunkt, skoleZ, turFramgang, veiAvstand, veiPunkt, zFraDist } from "./spill/perspektiv";
 import { flyttX, fortsettEtterZombie, settX, startSti, stiTick, trafikkBilde, xFraSkjerm, type StiHendelse, type StiTilstand } from "./spill/sti";
 import { SvarVakt } from "./spill/svar-vakt";
-import { lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
+import { alfErKlar, lastAlfStemme, onAlfStemmeStatus, type AlfStemmeStatus } from "./tale/alf-stemme";
 import {
   ALF_STEMME,
   AUTO_STEMME,
@@ -300,10 +300,11 @@ async function nesteOppgave(): Promise<void> {
   tegneForsok = 0;
   visOppgave(aktivOppgave, iDuell ? `Duell ${tur.duellRunde} av 3` : `Stopp ${tur.stopp} av 6`);
   startTimer();
-  const tale = lesOppgave(aktivOppgave);
-  window.setTimeout(() => {
-    if (innstillinger.lydPa && aktivOppgave && lesOppgave(aktivOppgave) === tale) si(tale, true);
-  }, 80);
+  if (innstillinger.lydPa) {
+    if (!alfErKlar()) $("hint-linje").textContent = "Alf gjør klar stemmen…";
+    aktiverLyd();
+    si(lesOppgave(aktivOppgave), true);
+  }
 }
 
 function avbrytLekseIntro(): void {
@@ -328,6 +329,7 @@ function bindLekseIntro(): void {
     lekseIntroNed = false;
     $("lekse-intro").hidden = true;
     stoppTale();
+    aktiverLyd();
     ferdig();
   });
 }
@@ -1297,6 +1299,13 @@ function visStemmeStatus(status: AlfStemmeStatus): void {
     const el = $(id);
     el.textContent = tekst;
     el.hidden = !tekst;
+  }
+  const hint = $("hint-linje");
+  if (status.tilstand === "laster" && !$("oppgave-kort").hidden && !hint.textContent) {
+    hint.textContent = tekst;
+  }
+  if (status.tilstand !== "laster" && hint.textContent.startsWith("Alf gjør klar stemmen")) {
+    hint.textContent = "";
   }
 }
 

@@ -12,6 +12,7 @@ import {
   velgBesteStemme,
   velgTaleModus,
 } from "./tale";
+import { ALLE_OPPGAVER } from "../oppgaver/data";
 
 describe("stemmevalg", () => {
   it("kjenner igjen norsk språk", () => {
@@ -127,5 +128,12 @@ describe("stemmevalg", () => {
       "Finn den lille bokstaven til.",
       "a",
     ]);
+  });
+
+  it("gir minst én taledel for alle oppgaver", () => {
+    for (const oppgave of ALLE_OPPGAVER) {
+      const deler = forberedTaleDeler(oppgave.prompt || oppgave.tale);
+      expect(deler.length, oppgave.id).toBeGreaterThan(0);
+    }
   });
 });
